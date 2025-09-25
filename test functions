@@ -1,0 +1,22 @@
+sync def extract_entities_via_llm(self, query: str) -> List[Dict]:
+    """Extract entities using GPT-4o completely"""
+    
+    extraction_prompt = f"""
+    Extract all entities that might have data variations from this equity query:
+    Query: "{query}"
+    
+    Look for:
+    - Geographic entities (countries, regions, states)
+    - Organizational entities (departments, job titles, company names)
+    - Status entities (employment status, grant types, plan names)
+    - Time entities (dates, periods, events)
+    
+    Return JSON format:
+    [
+      {{"type": "country", "value": "US", "confidence": "high"}},
+      {{"type": "employee_type", "value": "officers", "confidence": "high"}}
+    ]
+    """
+    
+    response = await self.gpt_client.complete(extraction_prompt)
+    return json.loads(response)
