@@ -32,7 +32,7 @@ Return only the PostgreSQL query without additional explanation unless complex."
 # File: src/rules/prompts/schema_info.yaml
 # ================================
 organization: |
-  We have three main schemas: **clients**, **participants**, and **grants**.
+  We have five main schemas: **clients**, **plans**, **grants**, **participants**, and **vesting_schedules**.
   
   **Hierarchical Data Structure:**
   ```
@@ -54,12 +54,21 @@ schemas:
         client_hub_key: "Primary key for joining"
         fiscal_year_end: "Company's fiscal year end date"
     
+  plans:
     plans:
       description: "Equity compensation plans for each client"
       key_columns:
         plan_id: "Primary key for plan"
-        client_hub_key: "Links to client_latest"
+        client_hub_key: "Links to clients.client_latest"
         plan_name: "Name of equity plan"
+        plan_type: "Type of plan (ESOP, RSU, etc.)"
+    
+    securities:
+      description: "Types of equity instruments available in each plan"
+      key_columns:
+        security_id: "Primary key for security"
+        plan_id: "Links to plans.plans"
+        security_type: "Type of equity (ISO, NQSO, RSU, etc.)"
 
   participants:
     participant_detail:
@@ -68,14 +77,60 @@ schemas:
         participant_hub_key: "Primary key for joining"
         employee_type: "Job classification (officer, executive, employee, etc.)"
         status: "Employment status (active, terminated, etc.)"
+        termination_date: "When employment ended (if applicable)"
+    
+    participant_employer_detail:
+      description: "Employment relationship to clients"
+      key_columns:
+        participant_hub_key: "Links to participant_detail"
+        client_hub_key: "Links to clients.client_latest"
+        department: "Employee's department/division"
+    
+    participant_address:
+      description: "Address details"
+      key_columns:
+        participant_hub_key: "Links to participant_detail"
+        country_code: "ISO country code"
+        region_code: "Geographic region"
+    
+    participant_legal_detail:
+      description: "Legal/compliance information"
+      key_columns:
+        participant_hub_key: "Links to participant_detail"
+        trading_plan_type: "Type of trading plan (10b5-1, etc.)"
+        blackout_start_date: "Trading blackout start"
+        blackout_end_date: "Trading blackout end"
 
   grants:
     grant_latest:
       description: "Individual equity awards"
       key_columns:
         grant_id: "Primary key for grant"
-        plan_id: "Links to plans table"
-        participant_hub_key: "Links to participant_detail"
+        plan_id: "Links to plans.plans"
+        participant_hub_key: "Links to participants.participant_detail"
+        security_id: "Links to plans.securities"
+        grant_type: "Type of equity (stock_option, rsu, etc.)"
+        grant_date: "When grant was awarded"
+        grant_amount: "Number of shares/units granted"
+    
+    tranches:
+      description: "Grant subdivisions with different vesting terms"
+      key_columns:
+        tranche_id: "Primary key for tranche"
+        grant_id: "Links to grants.grant_latest"
+        tranche_number: "Sequence number (1, 2, 3, etc.)"
+        tranche_percentage: "Percentage of total grant"
+        cliff_months: "Cliff period in months"
+
+  vesting_schedules:
+    vesting_schedules:
+      description: "Time-based rules for equity release"
+      key_columns:
+        schedule_id: "Primary key for schedule"
+        tranche_id: "Links to grants.tranches"
+        vesting_date: "When shares vest"
+        vested_percentage: "Percentage that vests on this date"
+        vesting_type: "Type of vesting (time_based, performance, etc.)"
 
 # ================================  
 # File: src/rules/prompts/business_context.md
@@ -100,11 +155,13 @@ schemas:
 - One Tranche → One Vesting Schedule (specific timing rules)
 
 **Data Flow:**
-1. **Plan Creation**: Client establishes equity compensation plan with securities available
-2. **Grant Award**: Individual participants receive grants from available plan securities  
-3. **Tranche Definition**: Grants are divided into tranches with different vesting terms
-4. **Vesting Execution**: Schedules determine when tranches become exercisable/owned
-5. **Exercise/Settlement**: Participants realize equity value based on vested amounts
+1. **Client Setup**: Company establishes relationship with Global Shares
+2. **Plan Creation**: Client creates equity compensation plans with available securities
+3. **Grant Award**: Individual participants receive grants from specific plan securities  
+4. **Tranche Definition**: Grants are divided into tranches with different vesting terms
+5. **Vesting Schedule Creation**: Each tranche gets specific vesting schedule rules
+6. **Vesting Execution**: Schedules determine when tranches become exercisable/owned
+7. **Exercise/Settlement**: Participants realize equity value based on vested amounts
 
 # ================================
 # File: src/rules/prompts/generation_rules.md  
@@ -126,11 +183,13 @@ schemas:
 10. Use CTEs for complex queries involving multiple aggregations
 
 **Domain-Specific Rules:**
-11. Always join through the proper hierarchy: Client → Plan → Grant → Participant → Tranche → Vesting Schedule
+11. Always join through the proper hierarchy: Clients → Plans → Grants → Participants → Tranches → Vesting Schedules
 12. Apply appropriate filtering for active vs terminated participants
 13. Consider fiscal calendar vs calendar year for date-based queries
 14. Include proper error handling for division by zero in calculations
-15. For regional queries, use participant_address or employer_detail tables
+15. For regional queries, use participants.participant_address or participants.participant_employer_detail tables
+16. For plan-level analysis, start from clients.client_latest → plans.plans → grants.grant_latest
+17. For vesting queries, join through grants.tranches → vesting_schedules.vesting_schedules
 
 # ================================
 # File: src/rules/prompts/query_patterns.md
@@ -142,7 +201,7 @@ schemas:
 -- Pattern: Join grants → tranches → vesting_schedules
 FROM grants.grant_latest g
 JOIN grants.tranches t ON g.grant_id = t.grant_id  
-JOIN grants.vesting_schedules vs ON t.tranche_id = vs.tranche_id
+JOIN vesting_schedules.vesting_schedules vs ON t.tranche_id = vs.tranche_id
 WHERE vs.vesting_date BETWEEN [date_range]
 ```
 
@@ -158,7 +217,7 @@ WHERE p.employee_type IN [officer_types] AND pl.trading_plan_type = '10b5-1'
 ```sql  
 -- Pattern: Start from client → plans → grants hierarchy
 FROM clients.client_latest c
-JOIN clients.plans pl ON c.client_hub_key = pl.client_hub_key
+JOIN plans.plans pl ON c.client_hub_key = pl.client_hub_key
 JOIN grants.grant_latest g ON pl.plan_id = g.plan_id
 ```
 
@@ -187,7 +246,7 @@ examples:
       FROM participants.participant_detail p
       JOIN grants.grant_latest g ON p.participant_hub_key = g.participant_hub_key
       JOIN grants.tranches t ON g.grant_id = t.grant_id
-      JOIN grants.vesting_schedules vs ON t.tranche_id = vs.tranche_id
+      JOIN vesting_schedules.vesting_schedules vs ON t.tranche_id = vs.tranche_id
       WHERE p.employee_type IN ('officer', 'executive', 'director')
       AND vs.vesting_date >= DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month')
       AND vs.vesting_date < DATE_TRUNC('month', CURRENT_DATE + INTERVAL '2 months')
