@@ -1,0 +1,681 @@
+# ================================================================
+# SUPPORTING CONFIGURATION FILES
+# ================================================================
+
+# File: requirements.txt
+# ================================
+"""
+# Core dependencies
+pydantic==2.5.0
+openai==1.3.0
+psycopg2-binary==2.9.7
+PyYAML==6.0.1
+asyncio-pool==0.6.0
+
+# Optional dependencies
+redis==5.0.1
+fastapi==0.104.0
+uvicorn==0.24.0
+
+# Development dependencies
+pytest==7.4.0
+pytest-asyncio==0.21.0
+black==23.9.0
+flake8==6.1.0
+"""
+
+# File: config/business_rules.yaml
+# ================================
+rules:
+  - id: "custom_senior_officers"
+    type: "vocabulary"
+    name: "Senior Officer Definition"
+    description: "Company-specific senior officer definition"
+    priority: 5
+    conditions:
+      terms: ["senior officers", "c-suite"]
+    sql_template: "employee_type IN ('ceo', 'cfo', 'cto') AND employee_level >= 'VP'"
+    requires_joins: ["participants.participant_employer_detail"]
+    
+  - id: "custom_vesting_calculation"
+    type: "calculation"
+    name: "Custom Vesting Calculation"
+    description: "Company-specific vesting calculation with cliff"
+    priority: 3
+    conditions:
+      calculation: "vested_amount_with_cliff"
+    sql_template: |
+      CASE 
+        WHEN vs.vesting_date <= CURRENT_DATE AND vs.vesting_date >= (g.grant_date + INTERVAL '12 months')
+        THEN g.grant_amount * (vs.vested_percentage / 100.0)
+        ELSE 0 
+      END
+    requires_joins: ["grants.grant_latest", "vesting_schedules.vesting_schedules"]
+
+# File: config/development.yaml
+# ================================
+database:
+  host: "localhost"
+  port: 5432
+  database: "equity_dev"
+  username: "dev_user"
+  password: "dev_password"
+  pool_size: 5
+
+openai:
+  api_key: "${OPENAI_API_KEY}"
+  model: "gpt-4o"
+  max_tokens: 4000
+  temperature: 0.1
+
+cache:
+  redis_url: "redis://localhost:6379"
+  ttl_seconds: 3600
+
+logging:
+  level: "DEBUG"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# File: config/production.yaml
+# ================================
+database:
+  host: "${DB_HOST}"
+  port: 5432
+  database: "${DB_NAME}"
+  username: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  pool_size: 20
+
+openai:
+  api_key: "${OPENAI_API_KEY}"
+  model: "gpt-4o"
+  max_tokens: 4000
+  temperature: 0.05
+
+cache:
+  redis_url: "${REDIS_URL}"
+  ttl_seconds: 7200
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# File: src/rules/prompts/schema_info.yaml
+# ================================
+organization: |
+  We have five main schemas: **clients**, **plans**, **grants**, **participants**, and **vesting_schedules**.
+  
+  **Hierarchical Data Structure:**
+  ```
+  Client Company
+  ├── Plans (Multiple equity compensation plans)
+  │   ├── Securities (Stock classes, option types per plan)  
+  │   └── Grants (Individual awards under each plan)
+  │       ├── Participants (Employees receiving grants)
+  │       └── Tranches (Grant subdivisions with different terms)
+  │           └── Vesting Schedules (Time-based release of equity)
+  ```
+
+schemas:
+  clients:
+    client_latest:
+      description: "Master client/company information"
+      key_columns:
+        client_hub_key: "Primary key for joining"
+        client_name: "Company name"
+        fiscal_year_end: "Company's fiscal year end date"
+    
+  plans:
+    plans:
+      description: "Equity compensation plans for each client"
+      key_columns:
+        plan_id: "Primary key for plan"
+        client_hub_key: "Links to clients.client_latest"
+        plan_name: "Name of equity plan"
+        plan_type: "Type of plan (ESOP, RSU, etc.)"
+    
+    securities:
+      description: "Types of equity instruments available in each plan"
+      key_columns:
+        security_id: "Primary key for security"
+        plan_id: "Links to plans.plans"
+        security_type: "Type of equity (ISO, NQSO, RSU, etc.)"
+
+  participants:
+    participant_detail:
+      description: "Core participant information"
+      key_columns:
+        participant_hub_key: "Primary key for joining"
+        employee_type: "Job classification (officer, executive, employee, etc.)"
+        status: "Employment status (active, terminated, etc.)"
+        termination_date: "When employment ended (if applicable)"
+    
+    participant_address:
+      description: "Address details"
+      key_columns:
+        participant_hub_key: "Links to participant_detail"
+        country_code: "ISO country code"
+        region_code: "Geographic region"
+    
+    participant_legal_detail:
+      description: "Legal/compliance information"
+      key_columns:
+        participant_hub_key: "Links to participant_detail"
+        trading_plan_type: "Type of trading plan (10b5-1, etc.)"
+        blackout_start_date: "Trading blackout start"
+        blackout_end_date: "Trading blackout end"
+
+  grants:
+    grant_latest:
+      description: "Individual equity awards"
+      key_columns:
+        grant_id: "Primary key for grant"
+        plan_id: "Links to plans.plans"
+        participant_hub_key: "Links to participants.participant_detail"
+        security_id: "Links to plans.securities"
+        grant_date: "When grant was awarded"
+        grant_amount: "Number of shares/units granted"
+    
+    tranches:
+      description: "Grant subdivisions with different vesting terms"
+      key_columns:
+        tranche_id: "Primary key for tranche"
+        grant_id: "Links to grants.grant_latest"
+        tranche_percentage: "Percentage of total grant"
+        cliff_months: "Cliff period in months"
+
+  vesting_schedules:
+    vesting_schedules:
+      description: "Time-based rules for equity release"
+      key_columns:
+        schedule_id: "Primary key for schedule"
+        tranche_id: "Links to grants.tranches"
+        vesting_date: "When shares vest"
+        vested_percentage: "Percentage that vests on this date"
+
+# File: src/rules/prompts/business_context.md
+# ================================
+## Business Context & Entity Relationships
+
+**Key Entity Definitions:**
+- **Clients** = Companies that use Global Shares for equity management
+- **Plans** = Structured equity compensation programs (e.g., "2024 Employee Stock Option Plan")
+- **Securities** = Types of equity instruments within plans (Common Stock, ISO, NQSO, RSUs, etc.)
+- **Grants** = Individual equity awards given to specific participants under a plan
+- **Participants** = Employees of client companies who receive equity awards
+- **Tranches** = Subdivisions of grants with different vesting terms (e.g., 25% per year over 4 years)
+- **Vesting Schedules** = Time-based rules governing when equity becomes exercisable/owned
+
+**Business Relationships:**
+- One Client → Many Plans (different equity programs)
+- One Plan → Many Securities (different equity types available)  
+- One Plan → Many Grants (individual awards to employees)
+- One Grant → One Participant (specific employee recipient)
+- One Grant → Many Tranches (different vesting portions)
+- One Tranche → One Vesting Schedule (specific timing rules)
+
+**Data Flow:**
+1. **Client Setup**: Company establishes relationship with Global Shares
+2. **Plan Creation**: Client creates equity compensation plans with available securities
+3. **Grant Award**: Individual participants receive grants from specific plan securities  
+4. **Tranche Definition**: Grants are divided into tranches with different vesting terms
+5. **Vesting Schedule Creation**: Each tranche gets specific vesting schedule rules
+6. **Vesting Execution**: Schedules determine when tranches become exercisable/owned
+7. **Exercise/Settlement**: Participants realize equity value based on vested amounts
+
+# File: src/rules/prompts/generation_rules.md
+# ================================
+## Query Generation Rules:
+
+**Core Rules:**
+1. Always use schema-qualified table names (e.g., `clients.client_latest`)
+2. Use meaningful table aliases (e.g., `c` for client, `p` for participant, `g` for grant)
+3. Join tables using hub_keys and proper foreign key relationships
+4. Apply business rules from the context above for term definitions
+5. Handle equity-specific date logic using the date context provided
+
+**Performance Rules:**
+6. Use discovered entity mappings from discovery context when provided
+7. Include all required JOINs as specified in business rules
+8. Handle NULL values appropriately (use COALESCE, IS NULL checks)
+9. Consider performance implications (use appropriate WHERE clause ordering)
+10. Use CTEs for complex queries involving multiple aggregations
+
+**Domain-Specific Rules:**
+11. Always join through proper hierarchy: Clients → Plans → Grants → Participants → Vesting Schedules
+12. Apply appropriate filtering for active vs terminated participants
+13. Consider fiscal calendar vs calendar year for date-based queries
+14. Include proper error handling for division by zero in calculations
+15. For regional queries, use participants.participant_address
+16. For plan-level analysis, start from clients.client_latest → plans.plans
+17. For vesting queries, join through grants.tranches → vesting_schedules.vesting_schedules
+
+# File: src/rules/prompts/query_patterns.md
+# ================================
+## Common Query Patterns:
+
+**Vesting Queries:**
+```sql
+-- Pattern: Join grants → tranches → vesting_schedules
+FROM grants.grant_latest g
+JOIN grants.tranches t ON g.grant_id = t.grant_id  
+JOIN vesting_schedules.vesting_schedules vs ON t.tranche_id = vs.tranche_id
+WHERE vs.vesting_date BETWEEN [date_range]
+```
+
+**Compliance Queries:**
+```sql
+-- Pattern: Include legal detail tables, apply officer/insider definitions  
+FROM participants.participant_detail p
+JOIN participants.participant_legal_detail pl ON p.participant_hub_key = pl.participant_hub_key
+WHERE p.employee_type IN [officer_types] AND pl.trading_plan_type = '10b5-1'
+```
+
+**Plan-Level Analysis:**
+```sql  
+-- Pattern: Start from client → plans → grants hierarchy
+FROM clients.client_latest c
+JOIN plans.plans pl ON c.client_hub_key = pl.client_hub_key
+JOIN grants.grant_latest g ON pl.plan_id = g.plan_id
+```
+
+**Regional Breakdowns:**
+```sql
+-- Pattern: Use participant_address, apply geographic entity mappings
+FROM participants.participant_detail p
+JOIN participants.participant_address pa ON p.participant_hub_key = pa.participant_hub_key
+GROUP BY pa.region_code, pa.country_code
+```
+
+**Financial Calculations:**
+```sql
+-- Pattern: Calculate vested amounts with proper date logic
+SELECT 
+  p.participant_name,
+  SUM(CASE 
+    WHEN vs.vesting_date <= CURRENT_DATE 
+    THEN g.grant_amount * (vs.vested_percentage / 100.0) 
+    ELSE 0 
+  END) as vested_amount
+FROM participants.participant_detail p
+JOIN grants.grant_latest g ON p.participant_hub_key = g.participant_hub_key
+JOIN grants.tranches t ON g.grant_id = t.grant_id
+JOIN vesting_schedules.vesting_schedules vs ON t.tranche_id = vs.tranche_id
+GROUP BY p.participant_hub_key, p.participant_name
+```
+
+# File: src/rules/prompts/base_template.txt
+# ================================
+You are a PostgreSQL expert specializing in equity plan management systems. 
+Given an input question, create a syntactically correct PostgreSQL query to run.
+
+## Database Schema Overview
+Here is the relevant table info: {table_info}
+
+{schema_section}
+
+{business_context}
+
+{rules_context}
+
+{discovery_context}
+
+{date_context}
+
+{generation_rules}
+
+## Required JOINs for this Query:
+{required_joins}
+
+{query_patterns}
+
+## Important Notes:
+- Follow business rule definitions exactly (e.g., if "officers" is defined as specific employee_types, use that)
+- Apply data normalization from discovery context (e.g., "US" queries should match discovered variations)
+- Use date context for temporal logic (fiscal quarters, vesting schedules, etc.)
+- Include appropriate error handling for edge cases (terminated employees, expired grants, etc.)
+
+Create the SQL query for: {input_question}
+
+Return only the PostgreSQL query without additional explanation unless the query is complex enough to warrant clarification.
+
+# File: tests/test_equity_query_processor.py
+# ================================
+import pytest
+import asyncio
+from unittest.mock import Mock, AsyncMock
+from src.equity_query_engine.core.equity_query_processor import EquityQueryProcessor
+
+@pytest.mark.asyncio
+async def test_simple_query_processing():
+    """Test basic query processing functionality"""
+    
+    processor = EquityQueryProcessor()
+    
+    table_info = """
+    CREATE TABLE participants.participant_detail (
+        participant_hub_key UUID PRIMARY KEY,
+        participant_name VARCHAR(255),
+        employee_type VARCHAR(50),
+        status VARCHAR(20)
+    );
+    """
+    
+    result = await processor.process_query(
+        user_query="Show all active officers",
+        table_info=table_info
+    )
+    
+    assert result['success'] is True
+    assert result['query_type'] == 'compliance_query'
+    assert 'sql' in result
+    assert result['entity_discovery_used'] is False
+    assert result['date_processing_used'] is False
+
+@pytest.mark.asyncio 
+async def test_complex_query_with_discovery():
+    """Test query with entity discovery"""
+    
+    processor = EquityQueryProcessor()
+    
+    table_info = """
+    CREATE TABLE participants.participant_detail (
+        participant_hub_key UUID PRIMARY KEY,
+        employee_type VARCHAR(50)
+    );
+    CREATE TABLE participants.participant_address (
+        participant_hub_key UUID,
+        country_code VARCHAR(3)
+    );
+    """
+    
+    result = await processor.process_query(
+        user_query="Show officers in US region",
+        table_info=table_info
+    )
+    
+    assert result['success'] is True
+    assert result['entity_discovery_used'] is True
+
+# File: scripts/setup.py
+# ================================
+#!/usr/bin/env python3
+"""
+Setup script for equity query engine
+"""
+
+import os
+import sys
+from pathlib import Path
+
+def create_directory_structure():
+    """Create the required directory structure"""
+    
+    directories = [
+        "src/equity_query_engine/core",
+        "src/equity_query_engine/discovery", 
+        "src/equity_query_engine/rules",
+        "src/equity_query_engine/rules/prompts",
+        "src/equity_query_engine/database",
+        "src/equity_query_engine/integrations",
+        "src/equity_query_engine/api/routes",
+        "src/equity_query_engine/utils",
+        "config",
+        "tests/unit",
+        "tests/integration",
+        "logs"
+    ]
+    
+    for directory in directories:
+        Path(directory).mkdir(parents=True, exist_ok=True)
+        
+        # Create __init__.py files for Python packages
+        if directory.startswith("src/"):
+            init_file = Path(directory) / "__init__.py"
+            if not init_file.exists():
+                init_file.write_text("# Auto-generated __init__.py\n")
+    
+    print("✅ Directory structure created successfully!")
+
+def create_config_files():
+    """Create default configuration files"""
+    
+    # Create .env.example
+    env_example = Path(".env.example")
+    if not env_example.exists():
+        env_example.write_text("""
+# Database Configuration
+DB_HOST=localhost
+DB_NAME=equity_management
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+
+# OpenAI Configuration  
+OPENAI_API_KEY=your_openai_api_key
+
+# Redis Configuration (Optional)
+REDIS_URL=redis://localhost:6379
+
+# Environment
+ENVIRONMENT=development
+LOG_LEVEL=INFO
+""".strip())
+    
+    print("✅ Configuration files created successfully!")
+
+def main():
+    """Main setup function"""
+    print("🚀 Setting up Equity Query Engine...")
+    
+    create_directory_structure()
+    create_config_files()
+    
+    print("\n📝 Next steps:")
+    print("1. Copy .env.example to .env and fill in your configuration")
+    print("2. Install dependencies: pip install -r requirements.txt")
+    print("3. Set up your database schema")
+    print("4. Configure your prompt files in src/rules/prompts/")
+    print("5. Run tests: pytest")
+    
+    print("\n🎉 Setup complete! Your equity query engine is ready to use.")
+
+if __name__ == "__main__":
+    main()
+
+# File: docker-compose.yml
+# ================================
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: equity_management
+      POSTGRES_USER: equity_user
+      POSTGRES_PASSWORD: equity_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  equity_query_engine:
+    build: .
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=equity_management
+      - DB_USER=equity_user
+      - DB_PASSWORD=equity_password
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./config:/app/config
+    command: uvicorn src.equity_query_engine.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+  redis_data:
+
+# File: Dockerfile
+# ================================
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
+
+# Expose port
+EXPOSE 8000
+
+# Default command
+CMD ["python", "-m", "src.equity_query_engine.main"]
+
+# File: README.md
+# ================================
+# Equity Query Engine
+
+A sophisticated natural language to SQL query engine specifically designed for equity plan management systems.
+
+## Features
+
+- **Phase 1: Foundation** - Schema documentation and business context management
+- **Phase 2: Core Logic** - Business rules engine with vocabulary mappings
+- **Phase 3: Intelligence** - Entity discovery and date processing
+- **Phase 4: Optimization** - Query patterns and JOIN optimization
+- **Phase 5: Integration** - Complete prompt assembly and GPT-4o integration
+
+## Quick Start
+
+1. **Setup Environment**
+   ```bash
+   python scripts/setup.py
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Start Services** (Optional - for full functionality)
+   ```bash
+   docker-compose up -d postgres redis
+   ```
+
+4. **Run the Engine**
+   ```python
+   from src.equity_query_engine.core.equity_query_processor import EquityQueryProcessor
+   
+   processor = EquityQueryProcessor()
+   result = await processor.process_query(
+       user_query="Show active officers with vesting in next month",
+       table_info=your_table_schema
+   )
+   print(result['sql'])
+   ```
+
+## Architecture
+
+The system is organized into 5 phases:
+
+### Phase 1: Foundation
+- `SchemaManager` - Database schema documentation
+- `BusinessContextManager` - Domain knowledge management
+
+### Phase 2: Core Logic  
+- `BusinessRulesManager` - Vocabulary and calculation rules
+- `GenerationRulesManager` - SQL generation guidelines
+
+### Phase 3: Intelligence
+- `EntityDiscovery` - Data variation detection and mapping
+- `DateProcessor` - Complex date expression resolution
+
+### Phase 4: Optimization
+- `QueryPatterns` - Common SQL pattern templates
+- JOIN requirement optimization
+
+### Phase 5: Integration
+- `PromptManager` - Complete prompt assembly
+- `EquityQueryProcessor` - Main orchestrator
+
+## Configuration
+
+The system supports multiple configuration sources:
+
+1. **Code-based rules** (core functionality)
+2. **YAML configuration** (customizable rules)
+3. **Database rules** (dynamic, client-specific)
+4. **Environment variables** (deployment settings)
+
+## Examples
+
+### Basic Query
+```python
+query = "Show all active participants"
+# Generates: SELECT p.participant_name FROM participants.participant_detail p 
+#           WHERE p.status = 'active' AND p.termination_date IS NULL
+```
+
+### Complex Query with Discovery
+```python  
+query = "Show officers with 10b5-1 plans in Q4 by US region"
+# Automatically handles:
+# - "officers" → employee_type IN ('officer', 'executive', 'director')
+# - "US" → country IN ('United States', 'USA', 'U.S.')  
+# - "Q4" → fiscal quarter based on company's fiscal year
+# - "10b5-1" → trading_plan_type = '10b5-1'
+```
+
+## Testing
+
+```bash
+# Run unit tests
+pytest tests/unit/
+
+# Run integration tests  
+pytest tests/integration/
+
+# Run all tests
+pytest
+```
+
+## Contributing
+
+1. Each component has clear ownership (see work breakdown)
+2. Update relevant configuration files when adding features
+3. Add tests for new functionality
+4. Update documentation
+
+## License
+
+Proprietary - Internal use only
