@@ -1,0 +1,111 @@
+1. Domain Vocabulary Rules
+Map business terms to technical implementations:
+pythonVOCABULARY_RULES = """
+Business Term Mappings:
+- "Officers" = participant_detail.employee_type IN ('officer', 'executive', 'director')
+- "Active participants" = participant_detail.status = 'active' AND participant_detail.termination_date IS NULL
+- "Vested grants" = grants.grant_latest WHERE vesting_date <= CURRENT_DATE
+- "Exercisable" = vested AND within exercise window AND not in blackout
+- "10b5-1 eligible" = officer-level participants with no recent insider transactions
+- "Next vesting" = MIN(vesting_date) WHERE vesting_date > CURRENT_DATE
+- "Underwater options" = current_stock_price < exercise_price
+"""
+2. Calculation Rules
+Define how to compute derived values:
+pythonCALCULATION_RULES = """
+Calculation Logic:
+- Vested Amount = grant_amount * (vested_tranches / total_tranches)
+- Exercise Value = (current_stock_price - exercise_price) * vested_shares
+- Tax Withholding = exercise_value * tax_rate_percentage
+- Regional Tax Rate = CASE 
+    WHEN participant_address.country_code = 'US' THEN 0.37
+    WHEN participant_address.country_code = 'UK' THEN 0.45
+    ELSE 0.25 END
+"""
+3. Temporal Business Rules
+Handle complex date logic:
+pythonTEMPORAL_RULES = """
+Date Logic Rules:
+- "Next month" = DATE_TRUNC('month', CURRENT_DATE + INTERVAL '1 month')
+- "Upcoming vesting" = vesting_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '90 days'
+- "Exercise window" = grant_date + INTERVAL '10 years' (for options)
+- "Blackout period" = participant_legal_detail.blackout_start_date <= CURRENT_DATE <= blackout_end_date
+- "Cliff date" = grant_date + cliff_months * INTERVAL '1 month'
+- "Performance period" = performance_start_date to performance_end_date
+"""
+4. Relationship Rules
+Define complex data relationships:
+pythonRELATIONSHIP_RULES = """
+Data Relationship Rules:
+- One participant can have multiple grants across different plans
+- Grants can have multiple tranches with different vesting schedules  
+- Officers must have legal_detail records for compliance tracking
+- Address changes create new versions (use latest effective_date)
+- Terminated participants retain grant records but cannot exercise
+- Parent company relationships: use client_hierarchy_view for consolidation
+"""
+5. Compliance Rules
+Critical for equity management:
+pythonCOMPLIANCE_RULES = """
+Compliance Business Rules:
+- Section 16 Officers: employee_type IN ('ceo', 'cfo', 'director') OR ownership > 10%
+- 10b5-1 Eligibility: Section 16 officers with no material non-public information
+- Insider Trading Windows: 2 trading days after earnings + 1 trading day after material events
+- Exercise Restrictions: Cannot exercise during blackout OR if underwater by >20%
+- Reporting Requirements: Form 4 filing within 2 business days of exercise
+"""
+6. Aggregation Rules
+How to group and summarize data:
+pythonAGGREGATION_RULES = """
+Grouping and Summary Rules:
+- Regional breakdown: Use participant_address.region_code or country_code
+- Department grouping: Use participant_employer_detail.department
+- Plan-level reporting: Group by grants.plan_name
+- Company-level: Use client_hub_key relationship
+- Executive summary: Include only employee_type IN ('officer', 'executive')
+- YTD calculations: Use fiscal_year_start from client_latest
+"""
+7. Comprehensive Prompt Structure
+pythonBUSINESS_RULES_PROMPT = f"""
+You are an expert in equity compensation SQL queries for Global Shares.
+
+{VOCABULARY_RULES}
+
+{CALCULATION_RULES}
+
+{TEMPORAL_RULES}
+
+{COMPLIANCE_RULES}
+
+{RELATIONSHIP_RULES}
+
+{AGGREGATION_RULES}
+
+Additional Guidelines:
+- Always include participant status checks (active/terminated)
+- Handle NULL values in calculations (use COALESCE)
+- Apply appropriate date filtering for performance
+- Include necessary JOINs for complete data relationships
+- Use meaningful column aliases in results
+
+User Query: "{{user_query}}"
+
+Generate PostgreSQL query following these business rules.
+"""
+8. Dynamic Rule Application
+For complex scenarios, you can even have conditional rules:
+pythonCONDITIONAL_RULES = """
+Context-Sensitive Rules:
+- IF query mentions "tax" → include participant_address for regional rates
+- IF query mentions "performance" → join performance_metrics tables  
+- IF query mentions "executives" → add Section 16 officer filtering
+- IF query includes dates → validate against fiscal calendar
+- IF query is for "reporting" → include audit trail fields
+"""
+Pro Tips:
+
+Start with core vocabulary - most important for accuracy
+Add calculation rules gradually - test each one
+Include edge cases - NULL handling, terminated employees
+Version control your rules - business logic changes over time
+Test with real queries - validate rule application
