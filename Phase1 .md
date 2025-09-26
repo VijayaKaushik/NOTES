@@ -17,7 +17,7 @@ Phase 1 creates the knowledge foundation that makes all subsequent phases possib
 2. BusinessContextManager → Domain knowledge and entity definitions
 
 
-##Component 1: SchemaManager
+## Component 1: SchemaManager
 
 Purpose: Provides GPT-4o with comprehensive database structure knowledge so it can generate accurate JOINs, use correct table names, and understand relationships.
 
