@@ -19,3 +19,10 @@ Phase 1 creates the knowledge foundation that makes all subsequent phases possib
 
 Component 1: SchemaManager
 Purpose: Provides GPT-4o with comprehensive database structure knowledge so it can generate accurate JOINs, use correct table names, and understand relationships.
+
+
+Step 1: File Structure Setup
+src/rules/prompts/
+├── schema_info.yaml    ← SchemaManager reads this
+├── business_context.md ← BusinessContextManager reads this
+└── base_template.txt
