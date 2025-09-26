@@ -86,11 +86,54 @@ markdown# src/rules/prompts/business_context.md
 These components get passed to the prompt assembly:
 python# Foundation knowledge that GPT-4o receives:
 foundation_context = f"""
-{schema_section}
+{Table Info}
 
 {business_context}
 
 [Other phases will add more context here...]
+
+
+### Check to run below for creating YAML:
+
+****
+class SchemaManager:
+    def get_complete_context(self) -> str:
+        """Single method that provides everything"""
+        
+        context = []
+        
+        # Schema organization
+        context.append(self.schema_data['organization'])
+        
+        # For each table, provide structured info
+        for schema_name, tables in self.schema_data['tables'].items():
+            context.append(f"\n**{schema_name} schema:**")
+            
+            for table_name, table_info in tables.items():
+                # Table description
+                context.append(f"- `{schema_name}.{table_name}`: {table_info['description']}")
+                
+                # Key columns with types
+                if 'columns' in table_info:
+                    for col_name, col_info in table_info['columns'].items():
+                        context.append(f"  - `{col_name}` {col_info['type']}: {col_info['description']}")
+                
+                # Business context (most important!)
+                if 'business_context' in table_info:
+                    context.append(f"  Business rules: {table_info['business_context']}")
+        
+        return "\n".join(context)
+
+# Usage - single component
+complete_context = schema_manager.get_complete_context()
+prompt = base_template.format(
+    schema_info=complete_context,  # ← Everything in one place
+    rules_context=rules_context,
+    # ... other components
+)
+***
+
+
 
 
    
