@@ -17,7 +17,8 @@ Phase 1 creates the knowledge foundation that makes all subsequent phases possib
 2. BusinessContextManager → Domain knowledge and entity definitions
 
 
-Component 1: SchemaManager
+##Component 1: SchemaManager
+
 Purpose: Provides GPT-4o with comprehensive database structure knowledge so it can generate accurate JOINs, use correct table names, and understand relationships.
 
 
@@ -26,3 +27,22 @@ src/rules/prompts/
 ├── schema_info.yaml    ← SchemaManager reads this
 ├── business_context.md ← BusinessContextManager reads this
 └── base_template.txt
+
+
+
+Step 4: Schema Section Output
+When get_schema_section() is called, it produces:
+markdown### Schema Organization & Data Hierarchy
+We have five main schemas: clients, plans, grants, participants, vesting_schedules
+
+**clients schema:**
+- `clients.client_latest`: Master client/company information
+  - `client_hub_key`: Primary key for joining
+  - `client_name`: Company name
+  - `fiscal_year_end`: Drives quarterly calculations
+
+**participants schema:**  
+- `participants.participant_detail`: Core participant information
+  - `participant_hub_key`: Primary key for joining
+  - `employee_type`: officer, executive, employee, etc.
+  - `status`: active, terminated, etc.
