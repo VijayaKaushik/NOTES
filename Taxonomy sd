@@ -1,0 +1,168 @@
+# Global Shares Service Desk - Proposed Taxonomy Structure
+
+Based on the content above, I recommend a **3-level taxonomy** to provide clear organization while maintaining scalability and ease of navigation for both content management and agentic RAG implementation.
+
+## Recommended 3-Level Taxonomy
+
+### Level 1: Main Categories (6)
+### Level 2: Subcategories
+### Level 3: Specific Topics/Documents
+
+---
+
+## 1. TRAINING & ONBOARDING
+### 1.1 New Hire Resources
+- Training Objectives
+- Onboarding Program Agenda and Schedule
+- Service Desk Training Handbook
+- Service Desk Analysts Resources - Links for New Joiners
+
+### 1.2 Knowledge Base Guides
+- Knowledge Base How to Guide
+- Glossary for Service Desk
+
+---
+
+## 2. EQUITY KNOWLEDGE
+### 2.1 Stock Market Fundamentals
+- Stock Market Academy
+- Releases and Stock Option Exercises
+- Sales Transactions (Orders)
+- External Share Transfers
+
+### 2.2 Compensation Plans
+- Employee Stock Purchase Plan (ESPP)
+- Share Incentive Plan (SIP)
+- Approved Profit Sharing Schemes (APSS)
+- Options and Restricted Stock Plans
+- Phantom Stock Plan
+- SAYE - Save As You Earn - The Basics
+
+---
+
+## 3. TOOLS & SYSTEMS
+### 3.1 Communication & Collaboration
+- Five9
+- Transferfect - Interpreting Assistance Line
+- JIRA & Confluence
+- Workplace Chatbot (LLM Co-pilot) for Service Desk
+
+### 3.2 Equity Management Systems
+- Equity Admin - How to Guide (introduction)
+- Equity Gateway Version 4 (EGv4) Rollout
+- Workplace Solutions Portal - Mobile App
+
+### 3.3 Support Tools
+- Service Desk Tools and how to access
+- ADA Chabot Tickets
+- PIMBA - Personal Ideas, Moving Beyond Actions
+
+---
+
+## 4. PROCESSES & WORKFLOWS
+### 4.1 Security & Authentication
+- Security Check Process
+- Security & Authentication Check Process
+
+### 4.2 Transaction Processing
+- Participant's Transactions
+- GSESL Clients with Fractional Shares Business Model
+- Dividend Processing
+- Share Transfers
+- Preclearance Wizard
+- Exercise Processing
+- Participant Trading Restrictions
+- Broker Dealer Merge: GSFS / JPMS LLC
+
+### 4.3 Service Desk Workflows
+- Service Desk Workflows (General)
+- Accessibility Query Handling
+- LLM Complaint Timeline Creation
+
+---
+
+## 5. POLICIES & GOVERNANCE
+### 5.1 Internal Policies
+- Internal SD Policies
+- Management KB
+
+### 5.2 Client Management
+- Clients and Templates
+
+### 5.3 Regional Policies
+- North America Service Desk Policies
+
+---
+
+## 6. CONTENT MANAGEMENT
+### 6.1 Content Review
+- Pages to be reviewed and removed
+
+### 6.2 Work in Progress
+- Service Desk Processes WIP
+
+---
+
+## Alternative 2-Level Taxonomy (Simplified)
+
+If you prefer a flatter structure for easier management:
+
+### Level 1: Main Categories (8)
+### Level 2: Specific Topics/Documents
+
+**1. TRAINING**
+- Training Objectives
+- Onboarding Program
+- Training Handbook
+- New Joiner Resources
+
+**2. EQUITY COMPENSATION**
+- ESPP, SIP, APSS, RSP
+- Phantom Stock Plan
+- SAYE
+- Stock Market Academy
+
+**3. TOOLS & TECHNOLOGY**
+- Five9, Transferfect, JIRA
+- Equity Admin, EGv4
+- Workplace Solutions
+- LLM Co-pilot
+
+**4. TRANSACTIONS**
+- All transaction types
+- Processing guides
+- Client models
+
+**5. SECURITY & COMPLIANCE**
+- Security checks
+- Authentication processes
+- Preclearance
+
+**6. WORKFLOWS**
+- Service desk workflows
+- Query handling
+- Complaint management
+
+**7. POLICIES**
+- Internal policies
+- Regional policies
+- Client templates
+
+**8. KNOWLEDGE MANAGEMENT**
+- How-to guides
+- Glossary
+- Content review
+
+---
+
+## Recommendation
+
+**Go with the 3-level taxonomy** because:
+
+✅ **Better for RAG**: Clear hierarchical structure improves semantic search and context retrieval  
+✅ **Scalability**: Easy to add new content without restructuring  
+✅ **User-friendly**: Logical grouping makes navigation intuitive  
+✅ **Content Management**: Clear ownership and maintenance responsibility  
+✅ **Reduces Duplication**: Clear categorization prevents duplicate content creation  
+
+The 3-level structure provides enough depth for precise categorization while avoiding over-complexity.
