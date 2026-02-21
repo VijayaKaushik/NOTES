@@ -1,0 +1,45 @@
+Subject: Release Note | AI Feature Updates — Workplace Coach
+
+Dear Team,
+
+We are pleased to share the latest AI feature updates released as part of our ongoing commitment to delivering intelligent, reliable, and user-centric solutions.
+
+─────────────────────────────────
+🚀 WHAT'S NEW
+─────────────────────────────────
+
+1. Streaming — Chain of Thought Visibility
+Users can now observe the agent's reasoning in real time as it works through tasks, providing full transparency into the AI's decision-making process.
+📈 Impact: Improved user engagement and trust.
+
+2. Feedback — Thumbs Up / Thumbs Down
+A simple feedback mechanism now allows users to rate AI responses positively or negatively with a single click, enabling structured capture of user sentiment.
+📈 Impact: Drives continuous improvement of AI quality.
+
+3. Demo Documents for Clients
+Dummy documents have been created and uploaded to support sales demonstrations for Clients X and Y, enabling the team to showcase all Workplace Coach features without exposing any confidential data.
+📈 Impact: Empowers the Sales team with a safe, fully featured demo environment.
+
+4. Workplace Coach — Production Deployment (EPMS)
+Workplace Coach has been successfully deployed to production for EPMS following all required approvals from the control board.
+📈 Impact: Enhanced adoption and efficiency gains for end users.
+
+5. Data Analysis Agent
+A Data Analysis Agent has been introduced into the release workflow, enabling flexible analysis of release data, identification of exceptions, and tax planning support.
+📈 Impact: Greater analytical flexibility and smarter decision-making within the release process.
+
+─────────────────────────────────
+⚙️ TECHNICAL ENHANCEMENTS
+─────────────────────────────────
+
+6. Telemetry
+Telemetry instrumentation has been added to improve traceability across AI components, supporting continuous and stable delivery of AI capabilities.
+📈 Impact: Stronger observability and system reliability.
+
+─────────────────────────────────
+
+For questions or feedback on any of the above features, please reach out to the product team.
+
+Best regards,
+[Your Name]
+[Your Team / Product Name]
