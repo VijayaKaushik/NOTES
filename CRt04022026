@@ -1,0 +1,41 @@
+Phase,Action Item,Key Stakeholders
+Governance,Determine Tier Level (1–4),"MRGR, Salva"
+Security,Parallel Pen Testing & Red Teaming,"Tasha, Shanti, Ryan Povar"
+Pilot,"Define ""Success Criteria"" for Waiver","MRGR, EPM Team"
+Control,Check for MBIA/Change Mgmt requirements,Control Manager
+
+## 1. Model Risk Governance & Review (MRGR)
+The most significant shift is that the project will now be classified as a Model rather than a standard application. This triggers a formal independent review process.
+
+Tiering Classification: * Tiers 1 & 2: High risk; requires intensive documentation and independent review.
+
+Tiers 3 & 4: Lower risk; relies on a single, simpler document type.
+
+Tier 5: Considered a non-model (human-in-the-loop).
+
+Documentation Change: You must update your documentation to align with MRGR standards. The review will focus on the orchestrator and agents in combination, not just individual components.
+
+Change Management: Once classified as a model, any future "material changes" must be approved by MRGR before being rolled out.
+
+## 2. Production Pilot & Waivers
+To bridge the gap between development and full release, a Production Pilot strategy is required.
+
+The MRGR Waiver: MRGR may grant a waiver to enter a "Production Pilot" (the "Wild Wild West"). This allows you to observe how end-users interact with the AI in real-time.
+
+Scope Limitation: Testing 5–6 specific intents thoroughly may allow for a faster full rollout. If the scope is "ask anything," MRGR will require a longer pilot to assess risks.
+
+The "Six-Month" Risk: You cannot expand the pilot scope until MRGR completes their full assessment. If documentation is poor or they are backed up, the project could be "stuck" in pilot mode for months.
+
+## 3. Technical & Security Requirements
+In addition to model risk, several security hurdles must be cleared in parallel:
+
+Penetration Testing: Standard application security probing.
+
+Adversarial Red Teaming: Specifically testing for prompt injections and malicious inputs (coordinated through PSL/Security teams).
+
+Data Quantification: MRGR will look at your architecture and "quantification"—you must prove the model only accesses authorized data sets through rigorous test scripts.
+
+## 4. Business & Control Management
+MBIA (New Business Initiative Assessment): You need to consult your Control Manager to determine if this is a "significant product/service change." If so, it requires an elevated risk review (Go/No-Go decision from leadership).
+
+EPM Engagement: The testing should not be done solely by developers. Evidence must show that EPMs (Product Managers) or those closer to the end-user are validating the AI's intent and outputs.
