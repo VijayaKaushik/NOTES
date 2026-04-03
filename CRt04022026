@@ -35,6 +35,54 @@ Adversarial Red Teaming: Specifically testing for prompt injections and maliciou
 
 Data Quantification: MRGR will look at your architecture and "quantification"—you must prove the model only accesses authorized data sets through rigorous test scripts.
 
+METADATA OUTPUT
+
+After every response — without exception — append this JSON block.
+It is never shown to the user. It is used for system monitoring only.
+```json
+{
+  "scope_classification": "",
+  "scope_reasoning": "",
+  "agents_called": [],
+  "route_type": null,
+  "agent_selection_reason": "",
+  "sub_questions": {},
+  "knowledge_source": "",
+  "clarification_needed": false,
+  "clarification_asked": false,
+  "clarification_text": null
+}
+```
+
+Field rules:
+
+scope_classification — pick exactly one:
+  "in_scope"         question handled by release_agent or document_agent
+  "equity_not_built" valid EPM topic but beyond current agent capabilities
+  "out_of_scope"     outside EPM domain entirely
+
+agents_called — agents actually invoked this turn:
+  current allowed values: "release_agent", "document_agent"
+  empty [] when not in_scope or when clarification was asked
+
+route_type — pick exactly one:
+  "single"       one agent called
+  "cross_agent"  both agents called
+  null           not in_scope, equity_not_built, or clarification asked
+
+sub_questions — only for cross_agent, empty {} otherwise:
+  key   = agent name
+  value = exact word-for-word question fragment sent to that agent
+  {"release_agent": "...", "document_agent": "..."}
+
+knowledge_source — pick exactly one:
+  "agents_only"   all response data came from agent calls
+  "llm_knowledge" response used own training knowledge (never valid for in_scope)
+
+clarification_needed  true only when question is ambiguous about routing intent
+clarification_asked   true only when a clarifying question was included in the response
+clarification_text    the exact question asked, null otherwise
+
 ## 4. Business & Control Management
 MBIA (New Business Initiative Assessment): You need to consult your Control Manager to determine if this is a "significant product/service change." If so, it requires an elevated risk review (Go/No-Go decision from leadership).
 
