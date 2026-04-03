@@ -1,0 +1,643 @@
+# EPM Regression — Ground Truth Manager
+## Technical Specification
+
+---
+
+## 1. Overview
+
+A web application for authoring and managing ground truth fixtures used in
+EPM orchestrator regression testing. Equity admins and developers use it to:
+
+- Author expected values for each test question (ground truth)
+- Browse and filter questions by any dimension
+- View a dashboard that slices questions by scope, category, agent, route type,
+  and other dimensions
+- Import run results from the regression test runner and view pass/fail rates
+  across those same dimensions
+- Export ground truth to CSV/Excel for use by the test runner
+
+The tool is internal — no authentication required for the initial build.
+
+---
+
+## 2. Tech Stack
+
+| Layer       | Choice                                      |
+|-------------|---------------------------------------------|
+| Backend     | Python 3.12, FastAPI, Uvicorn               |
+| Templates   | Jinja2 (served by FastAPI)                  |
+| Styling     | Plain CSS (no frameworks)                   |
+| JavaScript  | Vanilla JS for progressive enhancement only |
+|             | (form field show/hide, no SPA routing)      |
+| Storage     | SQLite via SQLAlchemy (separate DB from      |
+|             | the agent session DB)                       |
+| DB file     | `regression/ground_truth.db`                |
+| Excel export| openpyxl                                    |
+| Package mgr | uv                                          |
+
+FastAPI serves Jinja2 HTML templates. Every interaction is a full page load
+or a form POST — no fetch/AJAX except where noted. JavaScript is used only
+for conditional field show/hide in the add/edit form.
+
+---
+
+## 3. Database Schema
+
+### Table: questions
+
+| Column                         | Type     | Notes                                      |
+|-------------------------------|----------|--------------------------------------------|
+| question_id                   | TEXT PK  | Auto-generated: Q-001, Q-002…             |
+| question                      | TEXT     | The exact question text                    |
+| category                      | TEXT     | See allowed values §4.1                    |
+| expected_scope                | TEXT     | in_scope / equity_not_built / out_of_scope |
+| scope_notes                   | TEXT     | Optional authoring note                    |
+| expected_agents               | TEXT     | JSON array e.g. ["release_agent"]          |
+| expected_route_type           | TEXT     | single / cross_agent / null                |
+| sub_questions                 | TEXT     | JSON object {agent_name: fragment}         |
+| scope_level                   | TEXT     | release / client / grant / participant     |
+| guard_rail_type               | TEXT     | See allowed values §4.5                    |
+| expected_clarification_needed | BOOLEAN  |                                            |
+| ambiguity_reason              | TEXT     | Required if clarification_needed = true    |
+| retain_session                | BOOLEAN  | Reuse previous question's session          |
+| if_previous_failed            | TEXT     | block / run                                |
+| priority                      | TEXT     | high / medium / low                        |
+| tags                          | TEXT     | Comma-separated free text                  |
+| is_active                     | BOOLEAN  | Excluded from runs when false              |
+| authored_by                   | TEXT     |                                            |
+| notes                         | TEXT     | Optional free text for authors             |
+| date_created                  | DATETIME | Auto-set on insert                         |
+| date_modified                 | DATETIME | Auto-set on update                         |
+
+### Table: agents
+
+| Column      | Type    | Notes                                   |
+|-------------|---------|----------------------------------------|
+| name        | TEXT PK | e.g. release_agent                     |
+| description | TEXT    | One sentence describing capabilities   |
+| phase       | INTEGER | Phase when this agent is added (1,2,3…)|
+| is_active   | BOOLEAN | Inactive agents hidden from question form |
+| date_added  | DATETIME|                                        |
+
+Seed data on first run:
+- release_agent (Phase 1) — Handles vesting schedules, release events,
+  tax calculations, batch creation and approval workflows
+- document_agent (Phase 1) — Handles client-specific documentation,
+  contacts, SLAs, policies, how-to guides
+
+### Table: run_results
+
+Populated by importing a CSV exported by the Python test runner.
+Never written by the UI directly.
+
+| Column               | Type     | Notes                                |
+|---------------------|----------|--------------------------------------|
+| run_id              | TEXT     | e.g. RUN-001                        |
+| question_id         | TEXT FK  | References questions.question_id     |
+| prompt_version      | TEXT     | e.g. v1.5                           |
+| run_timestamp       | DATETIME |                                      |
+| overall_passed      | BOOLEAN  |                                      |
+| section_1_passed    | BOOLEAN  | scope_classification                 |
+| section_2_passed    | BOOLEAN  | routing                              |
+| section_3_passed    | BOOLEAN  | professional_response                |
+| section_4_passed    | BOOLEAN  | sub_question_fidelity                |
+| section_5_passed    | BOOLEAN  | no_generic_knowledge                 |
+| section_6_passed    | BOOLEAN  | no_internals_revealed                |
+| section_7_passed    | BOOLEAN  | clarification                        |
+| root_failure_section| INTEGER  | First section that failed (1-7)      |
+| root_failure_mode   | TEXT     | e.g. missing_agents, false_pass      |
+| latency_ms          | INTEGER  |                                      |
+| tokens_used         | INTEGER  |                                      |
+| error               | TEXT     | Null if run succeeded                |
+
+---
+
+## 4. Allowed Values
+
+### 4.1 category
+vesting / participant / grant / cross_agent / user_guidance /
+client_ops / out_of_scope / equity_not_built
+
+### 4.2 expected_scope
+in_scope / equity_not_built / out_of_scope
+
+### 4.3 expected_route_type
+single / cross_agent / null (null when scope is not in_scope)
+
+### 4.4 scope_level
+release / client / grant / participant
+
+### 4.5 guard_rail_type
+off_topic / equity_not_built / email_misuse /
+impersonation / fabrication_request
+
+(empty string when expected_scope = in_scope)
+
+### 4.6 if_previous_failed
+block / run
+
+### 4.7 priority
+high / medium / low
+
+---
+
+## 5. Project Structure
+
+```
+regression/
+├── main.py                  ← FastAPI app, route definitions
+├── database.py              ← SQLAlchemy setup, session factory
+├── models.py                ← SQLAlchemy ORM models
+├── schemas.py               ← Pydantic schemas for validation
+├── crud.py                  ← DB read/write functions
+├── export.py                ← CSV and Excel export logic
+├── ground_truth.db          ← SQLite database (gitignored)
+├── templates/
+│   ├── base.html            ← shared layout: sidebar + topbar
+│   ├── questions/
+│   │   ├── list.html        ← question list view
+│   │   └── form.html        ← add / edit form
+│   ├── dashboard/
+│   │   └── index.html       ← dashboard view
+│   ├── agents/
+│   │   └── list.html        ← agent registry view
+│   └── partials/
+│       ├── question_row.html
+│       └── flash.html
+└── static/
+    ├── style.css
+    └── form.js              ← conditional field show/hide only
+```
+
+---
+
+## 6. API Routes
+
+### Questions
+
+| Method | Path                        | Template             | Description              |
+|--------|-----------------------------|----------------------|--------------------------|
+| GET    | /                           | redirect → /questions|                          |
+| GET    | /questions                  | questions/list.html  | List with filters        |
+| GET    | /questions/new              | questions/form.html  | Blank add form           |
+| POST   | /questions/new              | redirect → /questions| Save new question        |
+| GET    | /questions/{id}/edit        | questions/form.html  | Pre-filled edit form     |
+| POST   | /questions/{id}/edit        | redirect → /questions| Save edited question     |
+| POST   | /questions/{id}/delete      | redirect → /questions| Delete question          |
+| POST   | /questions/{id}/toggle      | redirect → /questions| Toggle is_active         |
+
+### Agents
+
+| Method | Path                        | Template             | Description              |
+|--------|-----------------------------|----------------------|--------------------------|
+| GET    | /agents                     | agents/list.html     | Agent registry           |
+| POST   | /agents/new                 | redirect → /agents   | Add agent                |
+| POST   | /agents/{name}/delete       | redirect → /agents   | Remove agent             |
+
+### Dashboard
+
+| Method | Path                        | Template             | Description              |
+|--------|-----------------------------|----------------------|--------------------------|
+| GET    | /dashboard                  | dashboard/index.html | Dashboard, default view  |
+| GET    | /dashboard?group_by=X       | dashboard/index.html | Dashboard grouped by X   |
+| GET    | /dashboard?group_by=X&run_id=Y | dashboard/index.html | With run filter       |
+
+### Export & Import
+
+| Method | Path                        | Response             | Description              |
+|--------|-----------------------------|----------------------|--------------------------|
+| GET    | /export/csv                 | file download        | All questions as CSV     |
+| GET    | /export/excel               | file download        | 3-sheet Excel workbook   |
+| GET    | /export/json                | file download        | Ground truth JSON        |
+| POST   | /import/run-results         | redirect → /dashboard| Import run_results CSV   |
+
+---
+
+## 7. Views
+
+### 7.1 Shared Layout (base.html)
+
+**Sidebar** (fixed, left, 220px wide, dark navy background):
+- Logo area: "EPM · Regression Suite" label, "Ground Truth Manager" title
+- Nav section label: "Views"
+  - Questions (icon: document-list)
+  - Dashboard (icon: chart-bar)
+  - Agent Registry (icon: users)
+- Nav section label: "Actions"
+  - Export to Excel (icon: download)
+  - Import Run Results (icon: upload)
+- Footer: lists active agent names as small pills
+
+**Main area**: fills remaining width, contains topbar + content
+
+---
+
+### 7.2 Questions List (questions/list.html)
+
+**Topbar**:
+- Left: "Questions" title + question count badge
+- Right: "Load sample data" button (outline), "Add question" button (primary)
+
+**Filter bar** (below topbar):
+- Search input (searches question text and question_id)
+- Scope dropdown: All / in_scope / equity_not_built / out_of_scope
+- Category dropdown: All / [all category values]
+- Priority dropdown: All / high / medium / low
+- Active dropdown: All / Active / Inactive
+- Filters are applied via GET query params on page reload
+
+**Stats strip** (below filter bar, above table):
+Five cards showing counts for the currently filtered set:
+- Total questions
+- In scope
+- Guardrail tests
+- Cross-agent
+- Sequential
+
+**Table columns**:
+| Column       | Width  | Notes                                          |
+|-------------|--------|------------------------------------------------|
+| ID          | 70px   | Monospace font                                 |
+| Question    | flex   | Truncated to 2 lines, full text on hover title |
+| Scope       | 110px  | Coloured badge                                 |
+| Route       | 90px   | Badge: single / cross / —                      |
+| Agents      | 160px  | Dark pill per agent                            |
+| Priority    | 70px   | Coloured badge                                 |
+| Session 🔗  | 60px   | Chain icon if retain_session=true              |
+| Active      | 60px   | Green/grey dot                                 |
+| Actions     | 90px   | Edit button + Delete button                    |
+
+**Badge colours**:
+- in_scope: green background, green text
+- equity_not_built: amber background, amber text
+- out_of_scope: red background, red text
+- single: blue background, blue text
+- cross_agent: purple background, purple text
+- high priority: red tint
+- medium priority: amber tint
+- low priority: green tint
+
+---
+
+### 7.3 Add / Edit Form (questions/form.html)
+
+Single page with clearly labelled sections. All fields visible at once;
+JavaScript shows/hides conditional sections as scope and agent selections change.
+
+**Section 1 — Identity**
+
+| Field       | Type     | Required | Notes                              |
+|------------|----------|----------|------------------------------------|
+| question_id | text     | auto     | Read-only. Auto-generated on new   |
+| question    | textarea | yes      | 3 rows                             |
+| category    | select   | yes      | See §4.1                           |
+| priority    | select   | yes      | Default: medium                    |
+| authored_by | text     | no       |                                    |
+| tags        | text     | no       | Comma-separated                    |
+| is_active   | checkbox | yes      | Default: checked                   |
+| notes       | text     | no       | Authoring notes                    |
+
+**Section 2 — Scope**
+
+| Field         | Type   | Required | Notes                            |
+|--------------|--------|----------|----------------------------------|
+| expected_scope| select | yes      | Triggers show/hide of sections 3 and 4 |
+| scope_notes   | text   | no       |                                  |
+
+**Section 3 — Routing** (shown only when expected_scope = in_scope)
+
+| Field                | Type        | Required | Notes                              |
+|--------------------|-------------|----------|------------------------------------|
+| expected_agents     | checkboxes  | yes      | One checkbox per active agent      |
+| expected_route_type | display only| auto     | Derived: 1 agent=single, 2+=cross_agent |
+| scope_level         | select      | yes      | See §4.4                           |
+
+Sub-section — Sub-questions (shown only when cross_agent):
+For each selected agent, show one textarea labelled with the agent name
+and the instruction: "Exact question fragment — word for word, no rephrasing".
+
+**Section 4 — Guardrail** (shown only when expected_scope ≠ in_scope)
+
+| Field           | Type   | Required | Notes   |
+|----------------|--------|----------|---------|
+| guard_rail_type | select | yes      | See §4.5|
+| scope_level     | select | yes      | See §4.4|
+
+**Section 5 — Clarification**
+
+| Field                          | Type     | Required | Notes                             |
+|-------------------------------|----------|----------|-----------------------------------|
+| expected_clarification_needed  | checkbox |          | Triggers ambiguity_reason field   |
+| ambiguity_reason               | textarea | conditional | Required when clarification=true |
+
+**Section 6 — Session Sequencing**
+
+| Field              | Type     | Required | Notes                                |
+|-------------------|----------|----------|--------------------------------------|
+| retain_session     | checkbox |          | Triggers if_previous_failed field    |
+| if_previous_failed | select   | conditional | shown when retain_session=true    |
+
+**Form validation (server-side)**:
+- question and expected_scope and category are required
+- expected_agents required when expected_scope = in_scope
+- sub_questions required for each agent when route_type = cross_agent
+- ambiguity_reason required when expected_clarification_needed = true
+- if_previous_failed required when retain_session = true
+
+Validation errors shown inline above the relevant field.
+
+**Form JavaScript** (form.js — show/hide only, no state management):
+
+```javascript
+// On expected_scope change:
+//   show section-routing when value = in_scope
+//   show section-guardrail when value != in_scope and not empty
+
+// On agent checkbox change:
+//   count selected agents
+//   update route_type display text (auto-derived, readonly)
+//   show sub-questions section when count >= 2
+//   show/remove one textarea per selected agent
+
+// On expected_clarification_needed change:
+//   show/hide ambiguity_reason textarea
+
+// On retain_session change:
+//   show/hide if_previous_failed select
+```
+
+---
+
+### 7.4 Agent Registry (agents/list.html)
+
+**Topbar**: "Agent Registry" title + agent count badge
+
+**Add agent form** (top of page, above table):
+- agent_name (text, monospace, required): e.g. participant_agent
+- description (text, required)
+- phase (select: 1, 2, 3, 4)
+- "Add agent" button (POST /agents/new)
+
+**Table columns**:
+| Column      | Notes                                          |
+|------------|------------------------------------------------|
+| Agent name  | Monospace pill style                           |
+| Description | Plain text                                     |
+| Phase       | Badge                                          |
+| Used in     | Count of questions that reference this agent   |
+| Remove      | Disabled if used_in > 0, with tooltip explaining why |
+
+---
+
+### 7.5 Dashboard (dashboard/index.html)
+
+**Topbar**:
+- Left: "Dashboard" title
+- Centre: Group-by selector (prominent dropdown — this is the primary control)
+- Right: Run filter dropdown (All runs / by prompt version — populated from run_results table)
+
+**Group-by options**:
+| Value                          | Label                       |
+|-------------------------------|-----------------------------|
+| category                      | Category                    |
+| expected_scope                | Scope                       |
+| expected_route_type           | Route type                  |
+| priority                      | Priority                    |
+| scope_level                   | Scope level                 |
+| agent                         | Agent                       |
+| guard_rail_type               | Guardrail type              |
+| retain_session                | Session (sequential)        |
+| expected_clarification_needed | Clarification needed        |
+
+Note: group_by=agent is special — a question can appear in multiple agent
+rows if it has multiple expected_agents. Count questions per agent.
+
+---
+
+**Block 1 — Summary cards** (always shown, not affected by group_by)
+
+Six metric cards in a row:
+
+| Card            | Value                                    |
+|----------------|------------------------------------------|
+| Total questions | count of is_active=true questions        |
+| In scope        | count where expected_scope=in_scope      |
+| Guardrail tests | count where expected_scope!=in_scope     |
+| Cross-agent     | count where expected_route_type=cross_agent |
+| Sequential      | count where retain_session=true          |
+| High priority   | count where priority=high                |
+
+---
+
+**Block 2 — Ground truth breakdown** (responds to group_by selection)
+
+A horizontal bar chart where each row is one group value.
+
+For each row show:
+- Group label (left)
+- Horizontal bar (proportional to count, coloured by primary scope)
+- Count number
+- Percentage of total (right)
+
+Colour rules for bars:
+- If grouping by scope: use scope colours (green/amber/red)
+- If grouping by priority: use priority colours (red/amber/green)
+- If grouping by route_type: blue (single), purple (cross_agent), grey (null)
+- All other groupings: use navy/blue consistent colour
+
+Below the chart, a detail table with the same grouping:
+
+Table columns:
+| Column             | Notes                                            |
+|-------------------|--------------------------------------------------|
+| Group value        | Label for this group                             |
+| Count              | Number of questions in this group                |
+| % of total         | Percentage                                       |
+| In scope           | Count where expected_scope=in_scope              |
+| Guardrail          | Count where expected_scope!=in_scope             |
+| Cross-agent        | Count where expected_route_type=cross_agent      |
+| Sequential         | Count where retain_session=true                  |
+| High priority      | Count where priority=high                        |
+
+---
+
+**Block 3 — Section coverage matrix** (always shown)
+
+A matrix showing which prompt sections are exercised by each category.
+
+Rows: each category value that has at least one question
+Columns: Section 1 through Section 7
+
+Cell logic — a section is marked as "covered" for a category if questions
+in that category exercise that section:
+- S1 (scope): all questions
+- S2 (routing): questions where expected_scope=in_scope
+- S3 (professional): all questions
+- S4 (sub_question_fidelity): questions where expected_route_type=cross_agent
+- S5 (knowledge_source): questions where expected_scope=in_scope
+- S6 (no_internals): all questions
+- S7 (clarification): questions where expected_clarification_needed=true
+
+Cell display:
+- Covered + has questions: filled green circle + count
+- Covered but no questions in this category: empty circle (grey outline)
+- Not applicable for this category: dash
+
+---
+
+**Block 4 — Run results** (shown only when run_results table has data)
+
+If no run data: show a placeholder panel with message:
+  "No run results yet. Import a results CSV from the test runner to see
+   pass rates here."
+  Button: "Import run results" (links to POST /import/run-results)
+
+If run data exists:
+
+Sub-block A — Overall pass rates by section (for selected run filter):
+
+A row of 7 section cards:
+| Section | Name                  | Pass rate | Colour               |
+|--------|-----------------------|-----------|----------------------|
+| S1     | Scope classification  | X%        | green/amber/red      |
+| S2     | Routing accuracy      | X%        |                      |
+| S3     | Professional response | X%        |                      |
+| S4     | Sub-question fidelity | X%        |                      |
+| S5     | No generic knowledge  | X%        |                      |
+| S6     | No internals revealed | X%        |                      |
+| S7     | Clarification         | X%        |                      |
+
+Colour thresholds: ≥ 80% green · 60–79% amber · < 60% red
+
+Sub-block B — Pass rates by group (responds to group_by selection):
+
+Same table as Block 2 but with additional columns:
+| Column        | Notes                                              |
+|--------------|----------------------------------------------------|
+| Pass rate     | % overall_passed for this group                    |
+| S1 pass rate  | % section_1_passed for this group                  |
+| S2 pass rate  | % section_2_passed                                 |
+| … S7          |                                                    |
+| Top failure   | Most common root_failure_mode in this group        |
+
+Each pass rate cell coloured by the same green/amber/red threshold.
+
+Sub-block C — Worst questions (always 10 rows):
+
+Table showing the 10 questions with the lowest pass rate across all runs,
+sorted ascending:
+
+| Column        | Notes                                    |
+|--------------|------------------------------------------|
+| ID            | question_id                              |
+| Question      | Truncated                                |
+| Category      | Badge                                    |
+| Runs          | How many times this question was run     |
+| Pass rate     | % overall_passed across all runs         |
+| Top failure   | Most common root_failure_mode            |
+
+Sub-block D — Prompt version comparison (shown when 2+ versions in run_results):
+
+For each prompt version, show a row with overall pass rate and per-section
+pass rates. Highlight the best and worst version per section.
+
+---
+
+## 8. Export Formats
+
+### 8.1 CSV (GET /export/csv)
+
+One row per question. All database columns included.
+Arrays (expected_agents) stored as pipe-separated: "release_agent|document_agent"
+Objects (sub_questions) stored as JSON string.
+Filename: ground_truth_YYYY-MM-DD.csv
+
+### 8.2 Excel (GET /export/excel)
+
+Three sheets using openpyxl:
+
+**Sheet 1: Questions**
+Same columns as CSV. Header row bold. Column widths auto-fitted.
+Conditional cell colours on expected_scope column (green/amber/red).
+
+**Sheet 2: Agent Registry**
+name, description, phase, is_active, date_added
+
+**Sheet 3: Run Results** (empty if no runs imported)
+All columns from run_results table.
+
+Filename: epm_regression_YYYY-MM-DD.xlsx
+
+### 8.3 JSON (GET /export/json)
+
+Array of question objects in GroundTruth schema format (compatible with
+the Pydantic models in ground_truth.py). Filename: ground_truth.json
+
+---
+
+## 9. Import Run Results (POST /import/run-results)
+
+Accepts a CSV file upload matching the run_results table schema.
+Required columns: run_id, question_id, prompt_version, run_timestamp,
+overall_passed, section_1_passed through section_7_passed,
+root_failure_section, root_failure_mode, latency_ms, tokens_used.
+
+On import:
+1. Validate all question_ids exist in the questions table.
+   Reject rows where question_id not found.
+2. Reject duplicate (run_id, question_id) pairs.
+3. Insert valid rows.
+4. Show flash message: "Imported N rows from run RUN-ID. Rejected M rows."
+5. Redirect to /dashboard.
+
+---
+
+## 10. Flash Messages
+
+All POST actions redirect with a flash message.
+
+Flash types: success (green) / error (red) / warning (amber)
+
+Examples:
+- Question Q-042 saved.
+- Question Q-042 deleted.
+- Agent participant_agent added.
+- Cannot remove release_agent — used in 14 questions.
+- Imported 87 rows from RUN-003. Rejected 0 rows.
+- Validation error: Sub-questions required for all agents.
+
+---
+
+## 11. Startup Behaviour
+
+On startup (first run):
+1. Create the SQLite database if it does not exist.
+2. Create all tables.
+3. Seed the agents table with release_agent and document_agent if empty.
+4. Do not seed questions — those are authored by the user.
+
+Run command:
+```bash
+uv run uvicorn regression.main:app --reload --port 8080
+```
+
+URL: http://localhost:8080
+
+---
+
+## 12. Key Design Rules
+
+- Every page action is a form POST or a GET — no JavaScript fetch calls.
+- JavaScript in form.js does only show/hide of conditional fields.
+  It does not manage state, call APIs, or compute values.
+- expected_route_type is never stored by the user — it is derived server-side
+  from the length of expected_agents before saving.
+- question_id is generated server-side on insert (never client-side).
+- All validation happens server-side in schemas.py.
+  Client-side HTML5 required attributes are a convenience only.
+- The agents list in the question form is always read from the agents table
+  (is_active=true). Adding an agent in the registry immediately makes it
+  available in the form with no code changes.
+- Dashboard group_by and run_id filter are GET parameters so the URL is
+  shareable and bookmarkable.
+- Import of run results never modifies the questions table.
