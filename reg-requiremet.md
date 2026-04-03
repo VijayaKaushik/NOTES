@@ -383,6 +383,34 @@ at the top of the page content when present.
 
 ## What is not in scope for this version
 
+
+
+
+Updated requirements sentences to replace
+In the form section replace:
+
+Category: dropdown — vesting, participant, grant, cross_agent, user_guidance, client_ops, out_of_scope, equity_not_built
+
+With:
+
+Category: multi-select checkboxes — vesting, participant, grant, client_ops, user_guidance. At least one must be selected. A question can belong to multiple categories when it spans more than one topic domain.
+
+In the storage section replace any mention of category as a single value with:
+
+Category is stored as a comma-separated string in Excel and as a JSON array in the JSON export.
+
+In the dashboard section add this note under Block 2:
+
+When grouping by category, a question with multiple categories is counted in each relevant category row, the same way a cross-agent question is counted in each relevant agent row.
+
+In the filter bar section replace:
+
+dropdowns to filter by scope, category, priority, and active status
+
+With:
+
+dropdowns to filter by scope, category, priority, and active status. The category filter matches any question that includes the selected category — a question with categories vesting and participant appears in both the vesting filter result and the participant filter result.
+
 - Run results — will be added later as a third Excel sheet, an import route,
   and a fourth dashboard block
 - Authentication or user accounts
