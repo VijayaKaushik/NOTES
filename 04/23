@@ -1,0 +1,51 @@
+SLM Fine-Tuning
+Discussion Templates
+Fill in the blanks to drive stakeholder alignment before committing to a fine-tuning project.
+1 · THE TASK
+What problem are we solving?
+We want the model to automatically                          so that our team no longer has to                          for every                        .
+  ↑  do what?   |   manual effort being eliminated   |   request / document / query type
+Where does this task live today?
+Right now this is handled by                          and it takes roughly                    per instance.
+We do this approximately                        times per                .
+  ↑  who/what system today   |   time per instance   |   volume & frequency
+2 · THE DATA
+What training signal do we have?
+We have roughly                    labeled examples of                        →                        pairs.
+This data lives in                          and is currently                        .
+  ↑  N examples   |   input type   |   output type   |   location   |   clean / messy / partial
+Data sensitivity
+The training data                    contain PII or regulated client data.
+Before using it for fine-tuning, we will need to                                .
+  ↑  does / does not   |   anonymize / get legal approval / nothing
+3 · THE MODEL
+Deployment constraints
+The fine-tuned model must run                                because                          .
+We expect to serve roughly                        requests per day.
+  ↑  on-prem / in our VPC / cloud API   |   compliance / latency / cost
+Size vs. cost trade-off
+We are willing to invest up to                        on fine-tuning, and we need inference latency under                    per response.
+That points us toward a                  parameter model.
+  ↑  budget ($) / GPU hours   |   latency target   |   1B / 3B / 7B / 14B
+4 · SUCCESS CRITERIA
+How do we know it worked?
+We will consider this fine-tune successful when the model achieves                          above            %
+on our holdout set, and human reviewers rate output quality as                          in at least            %  of spot-checks.
+  ↑  metric: accuracy / F1 / BLEU / custom   |   threshold   |   acceptable / good / excellent
+What's the fallback?
+If the fine-tuned model does not meet the bar, we will                                    
+and revisit after                  .
+  ↑  fall back to base model / prompt-engineer / escalate to human   |   timeframe
+5 · OWNERSHIP & TIMELINE
+Who owns what?
+Data preparation will be owned by                        ,  model training by                        ,
+and production deployment by                        .  Target go-live is                    .
+  ↑  team / person for each role   |   target date or quarter
+
+
+Tips for using these templates
+Run through templates in order. The sequence is deliberate — task clarity must come before data or model decisions.
+Blanks that typically cause the most friction (and reveal the most useful gaps):
+•	"N examples" — teams almost always overestimate how much labeled data they have.
+•	"Does / does not contain PII" — in financial services, the answer is almost always does.
+•	Success metric + threshold — if these can't be filled in, the project isn't ready to start.
