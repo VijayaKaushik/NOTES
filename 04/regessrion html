@@ -1,0 +1,981 @@
+
+All projects
+Master Regression Builder
+
+
+
+How can I help you today?
+
+Regression testing for multi-agent orchestration system
+Last message 3 hours ago
+Memory
+Only you
+Project memory will show here after a few chats.
+
+Instructions
+Add instructions to tailor Claude’s responses
+
+Files
+3% of project capacity used
+
+EPM_PROJECT_SUMMARY (1).md
+1,410 lines
+
+md
+
+
+
+ground_truth (1).py
+232 lines
+
+py
+
+
+
+GROUND_TRUTH_MANAGER_SPEC.md
+644 lines
+
+md
+
+
+
+ground_truth_manager.html
+922 lines
+
+html
+
+
+
+ground_truth.json
+317 lines
+
+json
+
+
+
+ground_truth_manager.html
+52.68 KB •922 lines
+•
+Formatting may be inconsistent from source
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EPM Regression — Ground Truth Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1B2A;--navy2:#1A2E45;--navy3:#243B55;
+  --blue:#2563EB;--blue2:#1D4ED8;--blue-light:#EFF6FF;
+  --green:#059669;--green-light:#ECFDF5;
+  --amber:#D97706;--amber-light:#FFFBEB;
+  --red:#DC2626;--red-light:#FEF2F2;
+  --slate:#64748B;--slate2:#94A3B8;
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --bg:#F8FAFC;--white:#FFFFFF;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:220px;background:var(--navy);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--navy3)}
+.logo-tag{font-family:var(--mono);font-size:10px;color:var(--slate2);letter-spacing:.1em;text-transform:uppercase}
+.logo-title{font-size:15px;font-weight:600;color:#fff;margin-top:4px;line-height:1.3}
+.sidebar-nav{padding:12px 8px;flex:1}
+.nav-section{font-family:var(--mono);font-size:9px;color:var(--slate);letter-spacing:.12em;text-transform:uppercase;padding:8px 12px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;color:var(--slate2);font-size:13px;font-weight:400;transition:all .15s;margin-bottom:2px}
+.nav-item:hover{background:var(--navy2);color:#fff}
+.nav-item.active{background:var(--blue);color:#fff}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--navy3)}
+.agent-count{font-family:var(--mono);font-size:10px;color:var(--slate2)}
+.agent-pill{display:inline-flex;align-items:center;gap:4px;background:var(--navy2);border-radius:4px;padding:2px 6px;margin:2px 2px 0 0;font-size:10px;color:var(--slate2);font-family:var(--mono)}
+.agent-dot{width:5px;height:5px;border-radius:50%;background:#34D399;flex-shrink:0}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.view-title{font-size:16px;font-weight:600;color:var(--text)}
+.badge-count{background:var(--blue-light);color:var(--blue);font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:var(--sans)}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue2)}
+.btn-outline{background:var(--white);color:var(--text2);border:1px solid var(--border2)}.btn-outline:hover{background:var(--bg);border-color:var(--slate2)}
+.btn-danger{background:var(--red-light);color:var(--red);border:1px solid #FECACA}.btn-danger:hover{background:#FEE2E2}
+.btn svg{width:14px;height:14px}
+.btn-sm{padding:5px 10px;font-size:12px}
+
+/* ── Filters ── */
+.filters-bar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.search-wrap{position:relative;flex:1;max-width:320px}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text3)}
+.search-input{width:100%;padding:7px 10px 7px 32px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--sans);color:var(--text);background:var(--bg)}
+.search-input:focus{outline:none;border-color:var(--blue);background:var(--white)}
+select.filter-select{padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--sans);color:var(--text2);background:var(--white);cursor:pointer}
+select.filter-select:focus{outline:none;border-color:var(--blue)}
+.filter-divider{width:1px;height:20px;background:var(--border);margin:0 4px}
+
+/* ── Table ── */
+.content-area{flex:1;overflow-y:auto;padding:20px 24px}
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--bg)}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFC}
+.td-id{font-family:var(--mono);font-size:12px;color:var(--text2);white-space:nowrap}
+.td-question{max-width:280px;color:var(--text);line-height:1.4}
+.td-question span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.td-actions{display:flex;gap:6px;align-items:center}
+
+/* ── Badges ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;font-family:var(--mono);white-space:nowrap}
+.badge-in-scope{background:var(--green-light);color:var(--green)}
+.badge-not-built{background:var(--amber-light);color:var(--amber)}
+.badge-out-of-scope{background:var(--red-light);color:var(--red)}
+.badge-single{background:#EFF6FF;color:#1D4ED8}
+.badge-cross{background:#FAF5FF;color:#7C3AED}
+.badge-gray{background:var(--bg);color:var(--text2);border:1px solid var(--border)}
+.agent-tag{display:inline-block;background:var(--navy);color:#93C5FD;font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:3px;margin:1px}
+.dot-active{width:7px;height:7px;border-radius:50%;background:#10B981;display:inline-block}
+.dot-inactive{width:7px;height:7px;border-radius:50%;background:var(--border2);display:inline-block}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.hidden{display:none}
+.modal{background:var(--white);border-radius:10px;width:100%;max-width:740px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:16px;font-weight:600}
+.modal-subtitle{font-size:12px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.modal-close{width:28px;height:28px;border-radius:5px;border:1px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
+.modal-close:hover{background:var(--bg)}
+.modal-body{overflow-y:auto;flex:1;padding:20px 24px}
+.modal-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+
+/* ── Form ── */
+.form-section{margin-bottom:24px}
+.form-section-title{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:4px}
+label{font-size:12px;font-weight:500;color:var(--text2)}
+label .req{color:var(--red);margin-left:2px}
+label .hint{font-weight:400;color:var(--text3);margin-left:4px}
+input[type=text],textarea,select.form-select{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--sans);color:var(--text);background:var(--white)}
+input[type=text]:focus,textarea:focus,select.form-select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 2px #DBEAFE}
+input[type=text]:disabled,select.form-select:disabled{background:var(--bg);color:var(--text3);cursor:not-allowed}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+.form-hint{font-size:11px;color:var(--text3);margin-top:2px}
+.toggle-wrap{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border2);border-radius:6px;background:var(--bg);cursor:pointer}
+.toggle-wrap:hover{background:var(--white)}
+.toggle{width:36px;height:20px;border-radius:10px;background:var(--border2);position:relative;transition:.2s;flex-shrink:0;cursor:pointer}
+.toggle.on{background:var(--blue)}
+.toggle::after{content:'';width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{left:19px}
+.toggle-label{font-size:13px;color:var(--text);font-weight:400}
+.conditional{display:none}
+.conditional.show{display:block}
+
+/* ── Agent checkboxes ── */
+.agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.agent-checkbox{display:flex;align-items:flex-start;gap:10px;padding:10px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:var(--white);transition:.15s}
+.agent-checkbox:hover{border-color:var(--blue);background:var(--blue-light)}
+.agent-checkbox.selected{border-color:var(--blue);background:var(--blue-light)}
+.agent-checkbox input{display:none}
+.agent-check-icon{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.agent-checkbox.selected .agent-check-icon{background:var(--blue);border-color:var(--blue)}
+.agent-checkbox.selected .agent-check-icon::after{content:'';width:8px;height:5px;border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+.agent-name{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text)}
+.agent-desc{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.4}
+.route-type-display{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-family:var(--mono);font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.sub-questions-wrap{margin-top:12px}
+.sub-q-item{margin-bottom:10px}
+.sub-q-label{font-size:11px;font-weight:500;color:var(--navy);font-family:var(--mono);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.sub-q-label::before{content:'→';color:var(--blue)}
+
+/* ── Agent Registry view ── */
+.registry-table{background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.registry-add-row{display:flex;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg)}
+
+/* ── Empty state ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state svg{width:40px;height:40px;margin:0 auto 12px;opacity:.3}
+.empty-state p{font-size:14px}
+
+/* ── Stats strip ── */
+.stats-strip{display:flex;gap:16px;margin-bottom:16px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:10px 16px;flex:1}
+.stat-val{font-size:22px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.stat-label{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-tag">EPM · Regression Suite</div>
+    <div class="logo-title">Ground Truth<br>Manager</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Views</div>
+    <div class="nav-item active" onclick="showView('questions')" id="nav-questions">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      Questions
+    </div>
+    <div class="nav-item" onclick="showView('agents')" id="nav-agents">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path stroke-linecap="round" d="M6 20v-1a6 6 0 0112 0v1"/></svg>
+      Agent Registry
+    </div>
+    <div class="nav-section" style="margin-top:8px">Actions</div>
+    <div class="nav-item" onclick="exportCSV()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      Export to Excel
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="agent-count">Active agents</div>
+    <div id="agent-pills" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <!-- Questions view -->
+  <div id="view-questions">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="view-title">Questions</span>
+        <span class="badge-count" id="q-count">0</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline btn-sm" onclick="importSample()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          Load samples
+        </button>
+        <button class="btn btn-primary" onclick="openModal(null)">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          Add question
+        </button>
+      </div>
+    </div>
+    <div class="filters-bar">
+      <div class="search-wrap">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+        <input class="search-input" type="text" placeholder="Search questions…" oninput="applyFilters()" id="search-input">
+      </div>
+      <div class="filter-divider"></div>
+      <select class="filter-select" onchange="applyFilters()" id="filter-scope">
+        <option value="all">All scopes</option>
+        <option value="in_scope">In scope</option>
+        <option value="equity_not_built">Equity not built</option>
+        <option value="out_of_scope">Out of scope</option>
+      </select>
+      <select class="filter-select" onchange="applyFilters()" id="filter-category">
+        <option value="all">All categories</option>
+        <option value="vesting">Vesting</option>
+        <option value="participant">Participant</option>
+        <option value="grant">Grant</option>
+        <option value="cross_agent">Cross agent</option>
+        <option value="user_guidance">User guidance</option>
+        <option value="client_ops">Client ops</option>
+        <option value="out_of_scope">Out of scope</option>
+        <option value="equity_not_built">Equity not built</option>
+      </select>
+      <select class="filter-select" onchange="applyFilters()" id="filter-priority">
+        <option value="all">All priorities</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+      <select class="filter-select" onchange="applyFilters()" id="filter-active">
+        <option value="all">All</option>
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+    </div>
+    <div class="content-area">
+      <div class="stats-strip" id="stats-strip"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:70px">ID</th>
+              <th>Question</th>
+              <th style="width:100px">Scope</th>
+              <th style="width:90px">Route</th>
+              <th style="width:160px">Agents</th>
+              <th style="width:70px">Priority</th>
+              <th style="width:60px">Session</th>
+              <th style="width:60px">Active</th>
+              <th style="width:90px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="questions-tbody"></tbody>
+        </table>
+        <div id="empty-state" class="empty-state" style="display:none">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          <p>No questions yet. Click <strong>Add question</strong> or <strong>Load samples</strong> to get started.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agent Registry view -->
+  <div id="view-agents" style="display:none;flex:1;flex-direction:column">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="view-title">Agent Registry</span>
+        <span class="badge-count" id="agent-count">0</span>
+      </div>
+    </div>
+    <div class="content-area">
+      <div class="registry-table">
+        <div class="registry-add-row">
+          <input type="text" id="new-agent-name" placeholder="agent_name (e.g. release_agent)" style="font-family:var(--mono);flex:1;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px">
+          <input type="text" id="new-agent-desc" placeholder="Description" style="flex:2;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--sans)">
+          <select id="new-agent-phase" style="padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--sans);background:var(--white)">
+            <option value="1">Phase 1</option><option value="2">Phase 2</option>
+            <option value="3">Phase 3</option><option value="4">Phase 4</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="addAgent()">Add agent</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Agent name</th>
+              <th>Description</th>
+              <th style="width:80px">Phase</th>
+              <th style="width:80px">Questions</th>
+              <th style="width:70px">Remove</th>
+            </tr>
+          </thead>
+          <tbody id="agents-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL ── -->
+<div class="modal-overlay hidden" id="modal-overlay">
+<div class="modal">
+  <div class="modal-header">
+    <div>
+      <div class="modal-title" id="modal-title">Add question</div>
+      <div class="modal-subtitle" id="modal-id-display"></div>
+    </div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <!-- IDENTITY -->
+    <div class="form-section">
+      <div class="form-section-title">Identity</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Question ID</label>
+          <input type="text" id="f-id" disabled style="font-family:var(--mono)">
+        </div>
+        <div class="form-group">
+          <label>Category <span class="req">*</span></label>
+          <select class="form-select" id="f-category">
+            <option value="">— select —</option>
+            <option value="vesting">Vesting</option>
+            <option value="participant">Participant</option>
+            <option value="grant">Grant</option>
+            <option value="cross_agent">Cross agent</option>
+            <option value="user_guidance">User guidance</option>
+            <option value="client_ops">Client ops</option>
+            <option value="out_of_scope">Out of scope</option>
+            <option value="equity_not_built">Equity not built</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Question text <span class="req">*</span></label>
+          <textarea id="f-question" placeholder="Enter the exact question text as the admin would ask it…" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Priority</label>
+          <select class="form-select" id="f-priority">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Authored by</label>
+          <input type="text" id="f-author" placeholder="Your name">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tags <span class="hint">comma-separated</span></label>
+          <input type="text" id="f-tags" placeholder="routing, guardrail, clarification…">
+        </div>
+        <div class="form-group" style="justify-content:flex-end">
+          <label>Status</label>
+          <div class="toggle-wrap" onclick="toggleField('f-active')">
+            <div class="toggle on" id="f-active"></div>
+            <span class="toggle-label" id="f-active-label">Active — included in runs</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Notes <span class="hint">optional</span></label>
+          <input type="text" id="f-notes" placeholder="Authoring notes, edge cases, known traps…">
+        </div>
+      </div>
+    </div>
+
+    <!-- SCOPE -->
+    <div class="form-section">
+      <div class="form-section-title">Scope — Section 1</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Expected scope <span class="req">*</span></label>
+          <select class="form-select" id="f-scope" onchange="onScopeChange()">
+            <option value="">— select —</option>
+            <option value="in_scope">in_scope — handled by an agent</option>
+            <option value="equity_not_built">equity_not_built — valid EPM, no agent yet</option>
+            <option value="out_of_scope">out_of_scope — outside EPM domain entirely</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Scope notes <span class="hint">optional</span></label>
+          <input type="text" id="f-scope-notes" placeholder="Why this classification?">
+        </div>
+      </div>
+    </div>
+
+    <!-- ROUTING — shown only when in_scope -->
+    <div class="form-section conditional" id="section-routing">
+      <div class="form-section-title">Routing — Sections 2 + 4</div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Expected agents <span class="req">*</span></label>
+        <div class="form-hint" style="margin-bottom:8px">Select which agents should be called for this question</div>
+        <div class="agent-grid" id="agent-checkboxes"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Expected route type <span class="hint">auto-derived</span></label>
+          <div class="route-type-display" id="route-type-display">
+            <span id="route-type-val" style="color:var(--text3)">— select agents above —</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Scope level <span class="req">*</span></label>
+          <select class="form-select" id="f-scope-level">
+            <option value="release">release — scoped to a vesting event</option>
+            <option value="client">client — across all participants</option>
+            <option value="grant">grant — scoped to grant data</option>
+            <option value="participant">participant — individual participant</option>
+          </select>
+        </div>
+      </div>
+      <!-- Sub-questions — shown only for cross_agent -->
+      <div class="conditional" id="section-subquestions">
+        <label style="font-size:12px;font-weight:500;color:var(--text2);display:block;margin-bottom:4px">
+          Sub-questions <span class="req">*</span>
+          <span class="hint">exact word-for-word fragment sent to each agent</span>
+        </label>
+        <div class="sub-questions-wrap" id="sub-questions-wrap"></div>
+      </div>
+    </div>
+
+    <!-- GUARDRAIL — shown only when NOT in_scope -->
+    <div class="form-section conditional" id="section-guardrail">
+      <div class="form-section-title">Guardrail — Section 3</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Guardrail type <span class="req">*</span></label>
+          <select class="form-select" id="f-guardrail-type">
+            <option value="">— select —</option>
+            <option value="off_topic">off_topic — completely outside EPM</option>
+            <option value="equity_not_built">equity_not_built — EPM topic, no agent</option>
+            <option value="email_misuse">email_misuse — unrelated email request</option>
+            <option value="impersonation">impersonation — act as different system</option>
+            <option value="fabrication_request">fabrication_request — make up data</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Scope level</label>
+          <select class="form-select" id="f-scope-level-guardrail">
+            <option value="client">client</option>
+            <option value="release">release</option>
+            <option value="grant">grant</option>
+            <option value="participant">participant</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLARIFICATION -->
+    <div class="form-section">
+      <div class="form-section-title">Clarification — Section 7</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Clarification needed?</label>
+          <div class="toggle-wrap" onclick="toggleField('f-clarification')">
+            <div class="toggle" id="f-clarification"></div>
+            <span class="toggle-label" id="f-clarification-label">No — question is specific enough to route immediately</span>
+          </div>
+        </div>
+      </div>
+      <div class="conditional" id="section-ambiguity">
+        <div class="form-group">
+          <label>Ambiguity reason <span class="req">*</span></label>
+          <textarea id="f-ambiguity" placeholder="What is ambiguous? What clarification should the orchestrator ask for?" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEQUENCING -->
+    <div class="form-section">
+      <div class="form-section-title">Session sequencing</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Retain session?</label>
+          <div class="toggle-wrap" onclick="toggleField('f-retain-session')">
+            <div class="toggle" id="f-retain-session"></div>
+            <span class="toggle-label" id="f-retain-session-label">No — start a new session for this question</span>
+          </div>
+          <div class="form-hint">Yes = reuse previous question's session context</div>
+        </div>
+        <div class="form-group conditional" id="section-if-prev-failed">
+          <label>If previous question failed</label>
+          <select class="form-select" id="f-if-prev-failed">
+            <option value="block">block — skip this question, mark as blocked</option>
+            <option value="run">run — run anyway regardless of previous result</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <div id="modal-error" style="font-size:12px;color:var(--red)"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveQuestion()">Save question</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+let questions = [];
+let agents = [
+  {name:'release_agent', desc:'Handles vesting schedules, release events, tax calculations, batch creation', phase:1},
+  {name:'document_agent', desc:'Handles client-specific docs, contacts, SLAs, policies, how-to guides', phase:1},
+];
+let editingId = null;
+let toggleStates = {};
+
+// ─── Sample data ──────────────────────────────────────────────────────────────
+const SAMPLES = [
+  {question_id:'Q-001',question:'What are the upcoming vesting dates for the next 3 months?',category:'vesting',expected_scope:'in_scope',scope_notes:'Single-agent vesting schedule query',expected_agents:['release_agent'],expected_route_type:'single',sub_questions:{},scope_level:'client',guard_rail_type:'',expected_clarification_needed:false,ambiguity_reason:'',retain_session:false,if_previous_failed:'block',priority:'high',tags:'routing,single-agent',is_active:true,authored_by:'fixture_generator',notes:'Baseline routing test'},
+  {question_id:'Q-002',question:"Which participants have a pending KYC status, and when is their next vesting date?",category:'cross_agent',expected_scope:'in_scope',scope_notes:'Spans participant domain (KYC) and vesting domain',expected_agents:['release_agent','document_agent'],expected_route_type:'cross_agent',sub_questions:{release_agent:"which employee_ids are vesting on the next release date?",document_agent:"which of these employee_ids have pending KYC status?"},scope_level:'release',guard_rail_type:'',expected_clarification_needed:false,ambiguity_reason:'',retain_session:false,if_previous_failed:'block',priority:'high',tags:'routing,cross-agent,kyc',is_active:true,authored_by:'fixture_generator',notes:'Canonical cross-agent routing test — v1.2 failed this'},
+  {question_id:'Q-003',question:'What is the difference between Net Issuance and Sell-to-Cover?',category:'user_guidance',expected_scope:'in_scope',scope_notes:'Domain knowledge — must route to document_agent, not answer from LLM knowledge',expected_agents:['document_agent'],expected_route_type:'single',sub_questions:{},scope_level:'client',guard_rail_type:'',expected_clarification_needed:false,ambiguity_reason:'',retain_session:false,if_previous_failed:'block',priority:'high',tags:'knowledge-source,section-5',is_active:true,authored_by:'fixture_generator',notes:'Section 5 trap: orchestrator knows the answer from training but must still route'},
+  {question_id:'Q-004',question:'What is the capital of France?',category:'out_of_scope',expected_scope:'out_of_scope',scope_notes:'Completely outside EPM domain',expected_agents:[],expected_route_type:null,sub_questions:{},scope_level:'client',guard_rail_type:'off_topic',expected_clarification_needed:false,ambiguity_reason:'',retain_session:false,if_previous_failed:'block',priority:'high',tags:'guardrail,off-topic',is_active:true,authored_by:'fixture_generator',notes:'Classic false-pass test'},
+  {question_id:'Q-005',question:'Can you create a release batch for the May 15 vesting?',category:'vesting',expected_scope:'in_scope',scope_notes:'Batch creation — orchestrator routes to release_agent, which handles parameter collection',expected_agents:['release_agent'],expected_route_type:'single',sub_questions:{},scope_level:'release',guard_rail_type:'',expected_clarification_needed:false,ambiguity_reason:'',retain_session:false,if_previous_failed:'block',priority:'high',tags:'routing,clarification-trap',is_active:true,authored_by:'fixture_generator',notes:'Clarification trap: multi-step workflow is handled by agent, not orchestrator'},
+  {question_id:'Q-006',question:'Can you simulate a release for December 15 and show the tax impact?',category:'equity_not_built',expected_scope:'equity_not_built',scope_notes:'Path A (simulate) not yet built — only Path B (real release) is implemented',expected_agents:[],expected_route_type:null,sub_questions:{},scope_level:'release',guard_rail_type:'equity_not_built',expected_clarification_needed:false,ambiguity_reason:'',retain_session:false,if_previous_failed:'block',priority:'medium',tags:'guardrail,equity-not-built',is_active:true,authored_by:'fixture_generator',notes:'Must NOT route to release_agent. Must acknowledge not yet built.'},
+  {question_id:'Q-007',question:'Which of those participants also have unverified ACH?',category:'participant',expected_scope:'in_scope',scope_notes:'Follows Q-006 session — inherits employee_ids from previous turn',expected_agents:['document_agent'],expected_route_type:'single',sub_questions:{},scope_level:'release',guard_rail_type:'',expected_clarification_needed:false,ambiguity_reason:'',retain_session:true,if_previous_failed:'block',priority:'medium',tags:'retain-session,sequential',is_active:true,authored_by:'fixture_generator',notes:'Sequential question — retain_session=true, inherits context from Q-006'},
+];
+
+// ─── View switching ───────────────────────────────────────────────────────────
+function showView(view){
+  document.getElementById('view-questions').style.display = view==='questions'?'flex':'none';
+  document.getElementById('view-agents').style.display   = view==='agents'?'flex':'none';
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('nav-'+view).classList.add('active');
+  if(view==='agents') renderAgents();
+}
+
+// ─── Render questions table ───────────────────────────────────────────────────
+function renderQuestions(data){
+  const tbody = document.getElementById('questions-tbody');
+  const empty = document.getElementById('empty-state');
+  if(!data.length){tbody.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  tbody.innerHTML = data.map(q=>`
+    <tr>
+      <td class="td-id">${q.question_id}</td>
+      <td class="td-question"><span title="${q.question}">${q.question}</span></td>
+      <td>${scopeBadge(q.expected_scope)}</td>
+      <td>${routeBadge(q.expected_route_type)}</td>
+      <td>${(q.expected_agents||[]).map(a=>`<span class="agent-tag">${a.replace('_agent','')}</span>`).join('')||'<span style="color:var(--text3);font-size:11px">—</span>'}</td>
+      <td>${priorityBadge(q.priority)}</td>
+      <td style="text-align:center">${q.retain_session?'<span style="font-size:16px">🔗</span>':'<span style="color:var(--text3)">—</span>'}</td>
+      <td style="text-align:center"><span class="${q.is_active?'dot-active':'dot-inactive'}"></span></td>
+      <td>
+        <div class="td-actions">
+          <button class="btn btn-outline btn-sm" onclick="openModal('${q.question_id}')">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${q.question_id}')">✕</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function scopeBadge(s){
+  if(s==='in_scope') return '<span class="badge badge-in-scope">in_scope</span>';
+  if(s==='equity_not_built') return '<span class="badge badge-not-built">not_built</span>';
+  return '<span class="badge badge-out-of-scope">out_of_scope</span>';
+}
+function routeBadge(r){
+  if(!r) return '<span class="badge badge-gray">—</span>';
+  if(r==='single') return '<span class="badge badge-single">single</span>';
+  return '<span class="badge" style="background:#FAF5FF;color:#7C3AED">cross</span>';
+}
+function priorityBadge(p){
+  const m={high:'background:#FEF2F2;color:#B91C1C',medium:'background:#FFFBEB;color:#92400E',low:'background:#F0FDF4;color:#166534'};
+  return `<span class="badge" style="${m[p]||m.medium}">${p||'medium'}</span>`;
+}
+
+// ─── Filters & stats ─────────────────────────────────────────────────────────
+function applyFilters(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const scope = document.getElementById('filter-scope').value;
+  const cat   = document.getElementById('filter-category').value;
+  const pri   = document.getElementById('filter-priority').value;
+  const act   = document.getElementById('filter-active').value;
+  const filtered = questions.filter(x=>{
+    if(q && !x.question.toLowerCase().includes(q) && !x.question_id.toLowerCase().includes(q)) return false;
+    if(scope!=='all' && x.expected_scope!==scope) return false;
+    if(cat!=='all'   && x.category!==cat) return false;
+    if(pri!=='all'   && x.priority!==pri) return false;
+    if(act!=='all'   && String(x.is_active)!==act) return false;
+    return true;
+  });
+  document.getElementById('q-count').textContent = filtered.length;
+  renderStats(filtered);
+  renderQuestions(filtered);
+}
+
+function renderStats(data){
+  const inScope = data.filter(q=>q.expected_scope==='in_scope').length;
+  const guardrail = data.filter(q=>q.expected_scope!=='in_scope').length;
+  const crossAgent = data.filter(q=>q.expected_route_type==='cross_agent').length;
+  const sequential = data.filter(q=>q.retain_session).length;
+  document.getElementById('stats-strip').innerHTML = [
+    {val:data.length, label:'Total questions'},
+    {val:inScope, label:'In scope'},
+    {val:guardrail, label:'Guardrail tests'},
+    {val:crossAgent, label:'Cross-agent'},
+    {val:sequential, label:'Sequential'},
+  ].map(s=>`<div class="stat-card"><div class="stat-val">${s.val}</div><div class="stat-label">${s.label}</div></div>`).join('');
+}
+
+// ─── Modal ───────────────────────────────────────────────────────────────────
+function openModal(id){
+  editingId = id;
+  toggleStates = {};
+  const q = id ? questions.find(x=>x.question_id===id) : null;
+  document.getElementById('modal-title').textContent = id ? 'Edit question' : 'Add question';
+  document.getElementById('modal-id-display').textContent = id || nextId();
+  document.getElementById('modal-error').textContent = '';
+  populateAgentCheckboxes();
+
+  if(q){
+    document.getElementById('f-id').value = q.question_id;
+    document.getElementById('f-category').value = q.category||'';
+    document.getElementById('f-question').value = q.question||'';
+    document.getElementById('f-priority').value = q.priority||'medium';
+    document.getElementById('f-author').value = q.authored_by||'';
+    document.getElementById('f-tags').value = q.tags||'';
+    document.getElementById('f-notes').value = q.notes||'';
+    document.getElementById('f-scope').value = q.expected_scope||'';
+    document.getElementById('f-scope-notes').value = q.scope_notes||'';
+    document.getElementById('f-scope-level').value = q.scope_level||'client';
+    document.getElementById('f-scope-level-guardrail').value = q.scope_level||'client';
+    document.getElementById('f-guardrail-type').value = q.guard_rail_type||'';
+    document.getElementById('f-ambiguity').value = q.ambiguity_reason||'';
+    document.getElementById('f-if-prev-failed').value = q.if_previous_failed||'block';
+    setToggle('f-active', q.is_active!==false, 'Active — included in runs', 'Inactive — excluded from runs');
+    setToggle('f-clarification', !!q.expected_clarification_needed, 'Yes — ask a clarifying question', 'No — question is specific enough to route immediately');
+    setToggle('f-retain-session', !!q.retain_session, 'Yes — reuse previous session context', 'No — start a new session for this question');
+    // Set agent checkboxes
+    (q.expected_agents||[]).forEach(a=>{
+      const cb = document.querySelector(`[data-agent="${a}"]`);
+      if(cb) cb.classList.add('selected');
+    });
+    // Sub-questions
+    if(q.expected_route_type==='cross_agent') setTimeout(()=>updateRouteType(q.sub_questions||{}),50);
+  } else {
+    document.getElementById('f-id').value = nextId();
+    document.getElementById('f-category').value='';
+    document.getElementById('f-question').value='';
+    document.getElementById('f-priority').value='medium';
+    document.getElementById('f-author').value='';
+    document.getElementById('f-tags').value='';
+    document.getElementById('f-notes').value='';
+    document.getElementById('f-scope').value='';
+    document.getElementById('f-scope-notes').value='';
+    document.getElementById('f-scope-level').value='client';
+    document.getElementById('f-scope-level-guardrail').value='client';
+    document.getElementById('f-guardrail-type').value='';
+    document.getElementById('f-ambiguity').value='';
+    document.getElementById('f-if-prev-failed').value='block';
+    setToggle('f-active', true, 'Active — included in runs', 'Inactive — excluded from runs');
+    setToggle('f-clarification', false, 'No — question is specific enough to route immediately', '');
+    setToggle('f-retain-session', false, 'No — start a new session for this question', '');
+    updateRouteType({});
+  }
+  onScopeChange();
+  onClarificationChange();
+  onRetainSessionChange();
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden')}
+
+function onScopeChange(){
+  const v = document.getElementById('f-scope').value;
+  setConditional('section-routing', v==='in_scope');
+  setConditional('section-guardrail', v!=='in_scope' && v!=='');
+}
+function onClarificationChange(){
+  const on = toggleStates['f-clarification'];
+  setConditional('section-ambiguity', !!on);
+}
+function onRetainSessionChange(){
+  const on = toggleStates['f-retain-session'];
+  setConditional('section-if-prev-failed', !!on);
+}
+function setConditional(id, show){
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('show', show);
+}
+
+// ─── Agent checkboxes ─────────────────────────────────────────────────────────
+function populateAgentCheckboxes(){
+  const wrap = document.getElementById('agent-checkboxes');
+  wrap.innerHTML = agents.map(a=>`
+    <div class="agent-checkbox" data-agent="${a.name}" onclick="toggleAgent('${a.name}')">
+      <div class="agent-check-icon"></div>
+      <div>
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-desc">${a.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleAgent(name){
+  const el = document.querySelector(`[data-agent="${name}"]`);
+  if(el) el.classList.toggle('selected');
+  updateRouteType({});
+}
+
+function selectedAgents(){
+  return [...document.querySelectorAll('.agent-checkbox.selected')].map(el=>el.getAttribute('data-agent'));
+}
+
+function updateRouteType(existingSub={}){
+  const sel = selectedAgents();
+  let rt = null;
+  if(sel.length===1) rt='single';
+  if(sel.length>1)   rt='cross_agent';
+  const display = document.getElementById('route-type-display');
+  const val     = document.getElementById('route-type-val');
+  if(!rt){val.textContent='— select agents above —';val.style.color='var(--text3)';}
+  else{val.textContent=rt;val.style.color=rt==='single'?'var(--blue)':'#7C3AED';}
+  // Sub-questions
+  const isCross = rt==='cross_agent';
+  setConditional('section-subquestions', isCross);
+  if(isCross){
+    document.getElementById('sub-questions-wrap').innerHTML = sel.map(a=>`
+      <div class="sub-q-item">
+        <div class="sub-q-label">${a}</div>
+        <textarea id="sub-${a}" placeholder="Exact question fragment for ${a} (word for word, no rephrasing)" rows="2" style="width:100%;padding:7px 10px;border:1px solid var(--border2);border-radius:6px;font-size:12px;font-family:var(--sans);resize:vertical">${existingSub[a]||''}</textarea>
+      </div>`).join('');
+  }
+}
+
+// ─── Toggles ──────────────────────────────────────────────────────────────────
+function toggleField(id){
+  const el = document.getElementById(id);
+  const isOn = el.classList.toggle('on');
+  toggleStates[id] = isOn;
+  if(id==='f-active') document.getElementById('f-active-label').textContent = isOn?'Active — included in runs':'Inactive — excluded from runs';
+  if(id==='f-clarification'){
+    document.getElementById('f-clarification-label').textContent = isOn?'Yes — ask a clarifying question':'No — question is specific enough to route immediately';
+    onClarificationChange();
+  }
+  if(id==='f-retain-session'){
+    document.getElementById('f-retain-session-label').textContent = isOn?'Yes — reuse previous session context':'No — start a new session for this question';
+    onRetainSessionChange();
+  }
+}
+
+function setToggle(id, on, labelOn, labelOff){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.toggle('on', on);
+  toggleStates[id] = on;
+  const lbl = document.getElementById(id+'-label');
+  if(lbl) lbl.textContent = on ? labelOn : (labelOff||labelOn);
+}
+
+// ─── Save question ────────────────────────────────────────────────────────────
+function saveQuestion(){
+  const err = document.getElementById('modal-error');
+  err.textContent='';
+  const q_text  = document.getElementById('f-question').value.trim();
+  const scope   = document.getElementById('f-scope').value;
+  const cat     = document.getElementById('f-category').value;
+  if(!q_text){err.textContent='Question text is required.';return;}
+  if(!scope)  {err.textContent='Expected scope is required.';return;}
+  if(!cat)    {err.textContent='Category is required.';return;}
+  const agents_sel = selectedAgents();
+  if(scope==='in_scope' && !agents_sel.length){err.textContent='Select at least one agent for in_scope questions.';return;}
+  if(scope==='in_scope' && agents_sel.length>1){
+    const subs = agents_sel.map(a=>document.getElementById('sub-'+a)?.value.trim());
+    if(subs.some(s=>!s)){err.textContent='Sub-questions are required for all agents in cross_agent routing.';return;}
+  }
+  const rt = agents_sel.length===0?null:agents_sel.length===1?'single':'cross_agent';
+  const subQ = {};
+  if(rt==='cross_agent') agents_sel.forEach(a=>subQ[a]=document.getElementById('sub-'+a)?.value.trim()||'');
+  const isClarification = !!toggleStates['f-clarification'];
+  const ambiguity = document.getElementById('f-ambiguity').value.trim();
+  if(isClarification && !ambiguity){err.textContent='Ambiguity reason is required when clarification is needed.';return;}
+
+  const record = {
+    question_id:    editingId || document.getElementById('f-id').value,
+    question:       q_text,
+    category:       cat,
+    expected_scope: scope,
+    scope_notes:    document.getElementById('f-scope-notes').value.trim(),
+    expected_agents: scope==='in_scope'?agents_sel:[],
+    expected_route_type: scope==='in_scope'?rt:null,
+    sub_questions:  subQ,
+    scope_level:    scope==='in_scope'?document.getElementById('f-scope-level').value:document.getElementById('f-scope-level-guardrail').value,
+    guard_rail_type: scope!=='in_scope'?document.getElementById('f-guardrail-type').value:'',
+    expected_clarification_needed: isClarification,
+    ambiguity_reason: isClarification?ambiguity:'',
+    retain_session: !!toggleStates['f-retain-session'],
+    if_previous_failed: document.getElementById('f-if-prev-failed').value||'block',
+    priority:       document.getElementById('f-priority').value||'medium',
+    tags:           document.getElementById('f-tags').value.trim(),
+    is_active:      toggleStates['f-active']!==false,
+    authored_by:    document.getElementById('f-author').value.trim(),
+    notes:          document.getElementById('f-notes').value.trim(),
+    date_created:   editingId?(questions.find(x=>x.question_id===editingId)||{}).date_created||new Date().toISOString():new Date().toISOString(),
+    date_modified:  new Date().toISOString(),
+  };
+
+  if(editingId){
+    const idx = questions.findIndex(x=>x.question_id===editingId);
+    if(idx>-1) questions[idx]=record;
+  } else {
+    questions.push(record);
+  }
+  closeModal();
+  applyFilters();
+  renderAgentPills();
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────────
+function deleteQuestion(id){
+  if(!confirm(`Delete ${id}?`)) return;
+  questions = questions.filter(q=>q.question_id!==id);
+  applyFilters();
+}
+
+// ─── Agent registry ───────────────────────────────────────────────────────────
+function renderAgents(){
+  document.getElementById('agent-count').textContent = agents.length;
+  document.getElementById('agents-tbody').innerHTML = agents.map(a=>{
+    const usedIn = questions.filter(q=>(q.expected_agents||[]).includes(a.name)).length;
+    return `<tr>
+      <td><span class="agent-tag">${a.name}</span></td>
+      <td style="color:var(--text2);font-size:13px">${a.desc}</td>
+      <td style="text-align:center"><span class="badge badge-gray">Phase ${a.phase}</span></td>
+      <td style="text-align:center;font-family:var(--mono);font-size:12px">${usedIn}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="removeAgent('${a.name}')" ${usedIn?'title="Used in questions — remove from questions first" disabled':''}>Remove</button></td>
+    </tr>`;
+  }).join('');
+  renderAgentPills();
+}
+
+function addAgent(){
+  const name = document.getElementById('new-agent-name').value.trim().replace(/\s+/g,'_');
+  const desc = document.getElementById('new-agent-desc').value.trim();
+  const phase = parseInt(document.getElementById('new-agent-phase').value)||1;
+  if(!name||!desc){alert('Agent name and description are required.');return;}
+  if(agents.find(a=>a.name===name)){alert('Agent already exists.');return;}
+  agents.push({name,desc,phase});
+  document.getElementById('new-agent-name').value='';
+  document.getElementById('new-agent-desc').value='';
+  renderAgents();
+}
+
+function removeAgent(name){
+  const used = questions.filter(q=>(q.expected_agents||[]).includes(name)).length;
+  if(used){alert(`Cannot remove: ${name} is used in ${used} question(s).`);return;}
+  if(!confirm(`Remove agent "${name}"?`)) return;
+  agents = agents.filter(a=>a.name!==name);
+  renderAgents();
+}
+
+function renderAgentPills(){
+  document.getElementById('agent-pills').innerHTML = agents.map(a=>`<div class="agent-pill"><span class="agent-dot"></span>${a.name.replace('_agent','')}</div>`).join('');
+}
+
+// ─── Sample data ──────────────────────────────────────────────────────────────
+function importSample(){
+  if(questions.length && !confirm('This will add sample questions. Continue?')) return;
+  SAMPLES.forEach(s=>{if(!questions.find(q=>q.question_id===s.question_id)) questions.push(s);});
+  applyFilters();
+}
+
+// ─── Export CSV ───────────────────────────────────────────────────────────────
+function exportCSV(){
+  if(!questions.length){alert('No questions to export.');return;}
+  const cols=['question_id','question','category','expected_scope','scope_notes','expected_agents','expected_route_type','sub_questions','scope_level','guard_rail_type','expected_clarification_needed','ambiguity_reason','retain_session','if_previous_failed','priority','tags','is_active','authored_by','notes','date_created','date_modified'];
+  const esc=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const rows=[cols.join(','),...questions.map(q=>cols.map(c=>{
+    const v=q[c];
+    if(Array.isArray(v)) return esc(v.join('|'));
+    if(typeof v==='object'&&v) return esc(JSON.stringify(v));
+    return esc(v??'');
+  }).join(','))];
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`ground_truth_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ─── Utility ─────────────────────────────────────────────────────────────────
+function nextId(){
+  if(!questions.length) return 'Q-001';
+  const nums=questions.map(q=>parseInt((q.question_id||'Q-000').split('-')[1])||0);
+  return 'Q-'+String(Math.max(...nums)+1).padStart(3,'0');
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderAgentPills();
+applyFilters();
+</script>
+</body>
+</html>
