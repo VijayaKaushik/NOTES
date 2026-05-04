@@ -1,0 +1,61 @@
+Here’s a clean, structured, high-quality prompt you can use (for an AI assistant, engineer, or even yourself) based on that conversation:
+Refined Prompt
+I want to design and deploy a scalable application to Amazon Elastic Container Service (ECS) using best practices in infrastructure, backend design, and modular architecture.
+Context
+I already have multiple existing repositories that can serve as reference implementations:
+Coach
+Release
+Participant
+RFP (recommended as primary reference since it includes a UI layer)
+These repos demonstrate patterns for:
+Infrastructure setup (Terraform, Docker, deployment pipelines)
+Code organization and standards
+Integration with tools like Harness
+General backend architecture (though not necessarily agent-based systems)
+Objective
+Create a production-ready system that:
+Deploys to ECS
+Uses Terraform for infrastructure provisioning
+Uses Docker for containerization
+Follows deployment best practices (CI/CD, potentially via Harness)
+Improves Code Quality & Structure
+Refactors or builds code to meet high engineering standards
+Introduces clear separation of concerns
+Implements a Controller-Based Architecture
+Define controllers as the entry point for APIs
+Each controller should:
+Handle API endpoints
+Trigger AI/agent-based workflows where needed
+Fetch/store data from a database
+Example:
+FeedbackController → fetch and manage feedback data
+AgentController → trigger AI-based actions
+UserController → manage user-related operations
+Modularizes the Codebase
+Avoid placing all logic in a single main file
+Split functionality into:
+Controllers (API layer)
+Services (business logic)
+Infrastructure (deployment configs)
+Agents (if applicable)
+Prepares for Future Agent Integration
+Even if agents are not currently implemented, design the system so it can support:
+AI-driven workflows
+Modular agent execution
+Expected Output
+A well-structured repository that includes:
+Terraform scripts for ECS deployment
+Docker configuration
+CI/CD pipeline setup
+Modular backend code with clearly defined controllers
+Documentation explaining:
+How to deploy to ECS
+How components interact
+How to extend the system (e.g., adding new controllers or agents)
+Additional Notes
+Use the RFP repo as the closest reference architecture, especially for UI + backend integration.
+Highlight any required changes or missing components (e.g., additional controllers).
+Ensure the design is scalable, maintainable, and aligned with modern backend practices.
+If you want, I can next:
+�⁠Turn this into a step-by-step execution plan, or
+�⁠Convert it into a Claude / GPT prompt optimized for code generation (even more detailed and prescriptive).
