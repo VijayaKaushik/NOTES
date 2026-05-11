@@ -1,0 +1,171 @@
+# Phase 1 — Step 1.5 Port Instructions (Revised)
+
+Original step 1.5 assumed the work orchestrator already had a routing function.
+It does not. This file replaces step 1.5 with two sub-steps.
+
+---
+
+## Step 1.5a — Add `route_query` to the work orchestrator
+
+**Goal**: create the routing function that the rest of the orchestrator calls for every query.
+No planner involvement yet — legacy routing logic only.
+Shadow mode (1.5b) is wired on top of this.
+
+### What `route_query` must do
+
+At home, `route_query` is an ADK tool function that receives a `ToolContext` from the LLM.
+At work there is no ADK / ToolContext — the orchestrator is a plain REST handler.
+The equivalent function signature is:
+
+```python
+def route_query(query: str, context: dict) -> dict:
+    ...
+```
+
+`context` is whatever the work orchestrator already uses for cross-turn state
+(session dict, context registry, whatever the work pattern is — adapt accordingly).
+
+### Minimum shape to wire 1.5b on top of
+
+```python
+import os, json
+
+def route_query(query: str, context: dict) -> dict:
+    """
+    Classifies query and returns routing decision.
+    Currently uses legacy routing only.
+    Shadow mode (planner) is added in step 1.5b.
+    """
+    # --- LEGACY ROUTING (port your existing if/elif logic here) ---
+    route = _legacy_classify(query, context)   # replace with real work logic
+    # --- end legacy ---
+
+    return {
+        "route":      route,
+        "split_type": _legacy_split_type(route),  # "rag" | "operational" | "combo"
+        "intent":     "legacy",                   # placeholder until planner is live
+    }
+```
+
+**What `_legacy_classify` means**: whatever the work orchestrator currently does to decide
+which agent handles a query. If it is an if/elif block inline in the handler, extract it into
+this helper now. If it calls a rule engine or keyword matcher, wrap that here.
+The point is to have one named function that 1.5b can compare the planner against.
+
+### Checklist for 1.5a
+
+- [ ] `route_query(query, context)` function exists in the work orchestrator module
+- [ ] All existing routing logic moved into it (nothing bypasses it)
+- [ ] Function returns a dict with at minimum `route` and `split_type` keys
+- [ ] The orchestrator handler calls `route_query` instead of inline logic
+- [ ] Smoke test: run 3–5 real queries, verify routes are unchanged from before
+
+---
+
+## Step 1.5b — Wire shadow mode inside `route_query`
+
+**Goal**: run the planner on every query and log whether it agrees with legacy.
+No behavior change — the return value is still the legacy result.
+
+### Prerequisites
+
+- Step 1.5a complete (`route_query` exists)
+- Steps 1.1–1.3 complete (planner, schema, rag_registry ported to work)
+- `PLANNER_SHADOW_ENABLED` env var available in work environment
+
+### Shadow block — add after legacy routing, before return
+
+```python
+import os, json
+from .planner import Planner   # work import path — adjust as needed
+
+_planner = Planner()
+
+def route_query(query: str, context: dict) -> dict:
+    # --- LEGACY ROUTING ---
+    route = _legacy_classify(query, context)
+    legacy_result = {
+        "route":      route,
+        "split_type": _legacy_split_type(route),
+        "intent":     "legacy",
+    }
+    # --- end legacy ---
+
+    # --- SHADOW MODE (log-only, does not affect return value) ---
+    if os.getenv("PLANNER_SHADOW_ENABLED") == "1":
+        try:
+            shadow_plan = _planner.classify(query=query, context_registry=context)
+            shadow_route = shadow_plan.get("route")
+            if shadow_route != route:
+                print(
+                    f"[SHADOW MISMATCH] "
+                    f"planner={shadow_route} "
+                    f"legacy={route} "
+                    f"split_type={shadow_plan.get('split_type')} "
+                    f"intent={shadow_plan.get('intent')} "
+                    f"query={query!r}"
+                )
+            else:
+                print(
+                    f"[SHADOW MATCH] "
+                    f"route={shadow_route} "
+                    f"intent={shadow_plan.get('intent')} "
+                    f"query={query!r}"
+                )
+        except Exception as e:
+            # Shadow failure must never affect the live request
+            print(f"[SHADOW ERROR] {e!r} query={query!r}")
+    # --- end shadow ---
+
+    return legacy_result
+```
+
+### How to enable and read the logs
+
+```bash
+# Enable shadow mode
+export PLANNER_SHADOW_ENABLED=1
+
+# Grep for mismatches in logs
+grep "\[SHADOW MISMATCH\]" your-app.log
+
+# Grep for all shadow output (matches + mismatches)
+grep "\[SHADOW" your-app.log
+```
+
+### Checklist for 1.5b
+
+- [ ] Shadow block is inside `route_query`, after legacy logic, before `return`
+- [ ] Shadow failure is caught — exception prints `[SHADOW ERROR]` and does NOT re-raise
+- [ ] `PLANNER_SHADOW_ENABLED=0` (or unset): planner is never called, no latency impact
+- [ ] `PLANNER_SHADOW_ENABLED=1`: logs appear for every query, return value is unchanged
+- [ ] Run 5 real queries with shadow enabled, confirm responses are byte-for-byte identical
+  to running with shadow disabled
+
+### What to do with shadow output
+
+Collect logs for the regression catalog described in the main PORT_INSTRUCTIONS.
+Agreement rate targets before Phase 3 cutover:
+
+| Category            | Target |
+|---------------------|--------|
+| rag — how-to        | ≥95%   |
+| rag — client ops    | ≥90%   |
+| operational         | ≥90%   |
+| combo               | ≥80%   |
+| context_only        | ≥95%   |
+
+Log mismatches are the tuning backlog for the planner system prompt before Phase 3.
+Do NOT proceed to Phase 3 if any category is below 85%.
+
+---
+
+## Key differences from home (`epm-chatbot`)
+
+| Aspect | Home (epm-chatbot) | Work |
+|---|---|---|
+| `route_query` caller | ADK LLM via ToolContext | Your REST handler directly |
+| Context input | `tool_context.state` (ADK session) | Work session dict / context object |
+| Shadow placement | Same pattern | Same pattern |
+| Planner SDK | Gemini `generate_content` | OpenAI `chat.completions.parse` (from step 1.3) |
+| Error handling | ADK wraps exceptions | Must catch manually (done in 1.5b block above) |
