@@ -1,0 +1,307 @@
+# Phase 1 — Step 1.5 Port Instructions (Revised v2)
+
+Original step 1.5 assumed the work orchestrator already had a routing function.
+It does not. This file replaces step 1.5 with two sub-steps.
+
+Work has three operational agents: release_agent, operational_agent, participant_agent.
+These map differently from home — see the prerequisite section below before writing
+any code.
+
+---
+
+## Before starting 1.5a: read the work agent.py files
+
+The orchestrator prompt and route_query routing rules are derived from what each
+sub-agent can answer. Before writing either file you must read the `instruction=`
+string in each work agent.py and note down:
+
+1. What queries the agent handles (its capabilities)
+2. What it explicitly refuses or delegates (its boundaries)
+3. Whether it accepts a filter (employee_ids, grant_ids) from a prior agent turn
+
+**Agent.py files to read — and what to extract from each:**
+
+| Work agent | Read this file | Extract |
+|---|---|---|
+| `release_agent` | `release_agent/agent.py` | SKILLS section, RELEASE WORKFLOW rules, DATA ANALYSIS rules |
+| `operational_agent` | `operational_agent/agent.py` | CAPABILITIES section, WORKFLOW section, cross-agent filter behaviour |
+| `participant_agent` | `participant_agent/agent.py` | ROUTING RULES section, fields it owns exclusively, filter-by-employee_ids behaviour |
+
+**Home → work agent mapping** (for cross-referencing the home ref files):
+
+| Home agent | Work agent | Why |
+|---|---|---|
+| `vesting_agent` | `release_agent` | Vesting schedules, release workflow, batch creation, tax calc |
+| `releasemanagement_agent` (archived) | `release_agent` | Release data analysis capabilities also feed release_agent |
+| `grant_agent` | `operational_agent` | Grants, plans, unvested shares, operational data |
+| `participant_agent` | `participant_agent` | Same role — KYC, insider, blackout, address, ACH |
+
+**Where the extracted capabilities go:**
+
+- Into the `## AGENT CAPABILITIES SUMMARY` block in `orchestrator_prompt_ref.py`
+  (replace the `<<FILL FROM work/X/agent.py>>` markers)
+- Into the `## STRICT ROUTING ENFORCEMENT` block
+  (replace the `<<FILL: add equivalent boundary rules>>` markers)
+- Into the routing rule blocks inside `route_query` (the inline comments showing
+  what each agent handles)
+
+Only after filling in those markers should you write the work `route_query` function
+and the work orchestrator prompt.
+
+---
+
+## Step 1.5a — Add `route_query` to the work orchestrator
+
+**Goal**: create the routing function that the rest of the orchestrator calls for every
+query. No planner involvement yet — legacy routing logic only.
+Shadow mode (1.5b) is wired on top of this.
+
+### What `route_query` must do
+
+At home, `route_query` is an ADK tool function that receives a `ToolContext` from
+the LLM. At work there is no ADK / ToolContext — the orchestrator is a plain REST
+handler. The equivalent function signature is:
+
+```python
+def route_query(query: str, context: dict) -> dict:
+    ...
+```
+
+`context` is whatever the work orchestrator already uses for cross-turn state
+(session dict, context registry, whatever the work pattern is — adapt accordingly).
+
+### Capability-driven routing rules
+
+After reading each work agent.py (prerequisite above), the legacy routing block
+should reflect what you found. Skeleton with work agent names:
+
+```python
+def _legacy_classify(query: str, context: dict) -> str:
+    """
+    Returns an agent name string based on existing work routing logic.
+    Fill the routing conditions from what you read in each agent.py instruction=.
+    """
+    q = query.lower()
+
+    # release_agent handles:
+    # <<FILL: paste the capability summary from release_agent/agent.py here as comments>>
+    # e.g. vesting schedules, release workflow, batch creation, tax calculation
+    if <release_agent_conditions>:
+        return "release_agent"
+
+    # operational_agent handles:
+    # <<FILL: paste the capability summary from operational_agent/agent.py here as comments>>
+    # e.g. grants, plans, unvested shares, grant analysis, performance conditions
+    if <operational_agent_conditions>:
+        return "operational_agent"
+
+    # participant_agent handles:
+    # <<FILL: paste the capability summary from participant_agent/agent.py here as comments>>
+    # e.g. KYC, insider, blackout, address, ACH, withholding rate
+    if <participant_agent_conditions>:
+        return "participant_agent"
+
+    # RAG agents
+    if <how_to_or_guide_conditions>:
+        return "user_guide_agent"
+    if <client_ops_conditions>:
+        return "client_ops_agent"
+
+    return "operational_agent"   # safe default — adjust once you see real query distribution
+```
+
+### Minimum shape to wire 1.5b on top of
+
+```python
+import os, json
+
+def route_query(query: str, context: dict) -> dict:
+    """
+    Classifies query and returns routing decision.
+    Currently uses legacy routing only.
+    Shadow mode (planner) is added in step 1.5b.
+    """
+    # --- LEGACY ROUTING ---
+    route = _legacy_classify(query, context)
+    # --- end legacy ---
+
+    return {
+        "route":      route,
+        "split_type": _legacy_split_type(route),  # "rag" | "operational" | "combo"
+        "intent":     "legacy",                   # placeholder until planner is live
+    }
+
+def _legacy_split_type(route: str) -> str:
+    if route in ("user_guide_agent", "client_ops_agent"):
+        return "rag"
+    return "operational"
+```
+
+**What `_legacy_classify` means**: whatever the work orchestrator currently does to
+decide which agent handles a query. If it is an if/elif block inline in the handler,
+extract it into this helper now. The point is to have one named function that 1.5b
+can compare the planner against.
+
+### Orchestrator prompt — also written in this step
+
+After filling in the `<<FILL>>` markers in `orchestrator_prompt_ref.py`, copy the
+completed `ORCHESTRATOR_INSTRUCTION` string into the work orchestrator's agent.py
+(or system prompt config, depending on work's architecture).
+
+The critical sections to fill before copying:
+
+1. **`route = "release_agent"` block** — add the sub-rules from release_agent's
+   SKILLS and RELEASE WORKFLOW sections. The orchestrator needs to know when
+   release_agent owns a workflow step end-to-end (e.g. it must not be interrupted
+   mid-batch).
+
+2. **`route = "operational_agent"` block** — add the sub-rules from operational_agent's
+   CAPABILITIES. Specifically: does it accept employee_ids from context? What fields
+   does it own exclusively that no other agent has?
+
+3. **`route = "participant_agent"` block** — the context-filter rule (append
+   "Filter to employee_ids: <ids>" when requires_context = true) must match how
+   participant_agent's instruction= says it expects filtered queries.
+
+4. **STRICT ROUTING ENFORCEMENT** — add one enforcement rule per agent stating
+   which fields / query types belong exclusively to that agent and must never be
+   answered by the orchestrator itself.
+
+### Checklist for 1.5a
+
+- [ ] Work agent.py files read for release_agent, operational_agent, participant_agent
+- [ ] `<<FILL>>` markers in `orchestrator_prompt_ref.py` replaced with work content
+- [ ] `route_query(query, context)` function exists in the work orchestrator module
+- [ ] `_legacy_classify` reflects actual work routing conditions (from agent.py reading)
+- [ ] All existing routing logic moved into `route_query` (nothing bypasses it)
+- [ ] Function returns a dict with at minimum `route` and `split_type` keys
+- [ ] Orchestrator prompt updated with work agent names and work capability descriptions
+- [ ] Smoke test: run 3–5 real queries, verify routes are unchanged from before
+
+---
+
+## Step 1.5b — Wire shadow mode inside `route_query`
+
+**Goal**: run the planner on every query and log whether it agrees with legacy.
+No behavior change — the return value is still the legacy result.
+
+### Prerequisites
+
+- Step 1.5a complete (`route_query` exists, orchestrator prompt updated)
+- Steps 1.1–1.3 complete (planner, schema, rag_registry ported to work)
+- `PLANNER_SHADOW_ENABLED` env var available in work environment
+
+### Shadow block — add after legacy routing, before return
+
+```python
+import os, json
+from .planner import Planner   # work import path — adjust as needed
+
+_planner = Planner()
+
+def route_query(query: str, context: dict) -> dict:
+    # --- LEGACY ROUTING ---
+    route = _legacy_classify(query, context)
+    legacy_result = {
+        "route":      route,
+        "split_type": _legacy_split_type(route),
+        "intent":     "legacy",
+    }
+    # --- end legacy ---
+
+    # --- SHADOW MODE (log-only, does not affect return value) ---
+    if os.getenv("PLANNER_SHADOW_ENABLED") == "1":
+        try:
+            shadow_plan = _planner.classify(query=query, context_registry=context)
+            shadow_route = shadow_plan.get("route")
+            if shadow_route != route:
+                print(
+                    f"[SHADOW MISMATCH] "
+                    f"planner={shadow_route} "
+                    f"legacy={route} "
+                    f"split_type={shadow_plan.get('split_type')} "
+                    f"intent={shadow_plan.get('intent')} "
+                    f"query={query!r}"
+                )
+            else:
+                print(
+                    f"[SHADOW MATCH] "
+                    f"route={shadow_route} "
+                    f"intent={shadow_plan.get('intent')} "
+                    f"query={query!r}"
+                )
+        except Exception as e:
+            # Shadow failure must never affect the live request
+            print(f"[SHADOW ERROR] {e!r} query={query!r}")
+    # --- end shadow ---
+
+    return legacy_result
+```
+
+### What the planner's system prompt must reflect at work
+
+The planner (`planner.py`) contains `ROUTING_SYSTEM_PROMPT`. At work, the agent
+name sections inside that prompt must use work agent names. Cross-check:
+
+| Home name in planner.py | Replace with |
+|---|---|
+| `vesting_agent` | `release_agent` |
+| `grant_agent` | `operational_agent` |
+| `participant_agent` | `participant_agent` (no change) |
+
+The column descriptions under each agent in `ROUTING_SYSTEM_PROMPT` (e.g.
+`employee_id`, `grant_id`, `kyc_status`) must also be updated to match the
+work agent's actual data fields — read those from each work agent.py's
+instruction= and from its tool signatures.
+
+### How to enable and read the logs
+
+```bash
+# Enable shadow mode
+export PLANNER_SHADOW_ENABLED=1
+
+# Grep for mismatches only
+grep "\[SHADOW MISMATCH\]" your-app.log
+
+# Grep for all shadow output
+grep "\[SHADOW" your-app.log
+```
+
+### Checklist for 1.5b
+
+- [ ] Shadow block is inside `route_query`, after legacy logic, before `return`
+- [ ] Shadow failure is caught — prints `[SHADOW ERROR]` and does NOT re-raise
+- [ ] Work agent names used in planner.py `ROUTING_SYSTEM_PROMPT` (not home names)
+- [ ] `PLANNER_SHADOW_ENABLED=0` (or unset): planner is never called, no latency impact
+- [ ] `PLANNER_SHADOW_ENABLED=1`: logs appear for every query, return value is unchanged
+- [ ] Run 5 real queries with shadow enabled, confirm responses identical to without
+
+### What to do with shadow output
+
+Collect logs for the regression catalog in the main PORT_INSTRUCTIONS.
+Agreement rate targets before Phase 3 cutover:
+
+| Category            | Target |
+|---------------------|--------|
+| rag — how-to        | ≥95%   |
+| rag — client ops    | ≥90%   |
+| operational         | ≥90%   |
+| combo               | ≥80%   |
+| context_only        | ≥95%   |
+
+Log mismatches are the tuning backlog for the planner system prompt.
+Do NOT proceed to Phase 3 if any category is below 85%.
+
+---
+
+## Key differences from home (`epm-chatbot`)
+
+| Aspect | Home (epm-chatbot) | Work |
+|---|---|---|
+| Operational agents | vesting_agent, grant_agent, participant_agent | release_agent, operational_agent, participant_agent |
+| `route_query` caller | ADK LLM via ToolContext | REST handler calls it directly |
+| Context input | `tool_context.state` (ADK session) | Work session dict / context object |
+| Orchestrator prompt source | hardcoded in agent.py | Derived from work agent.py instruction= strings |
+| Planner agent names | vesting_agent, grant_agent | release_agent, operational_agent |
+| Planner SDK | Gemini `generate_content` | OpenAI `chat.completions.parse` (from step 1.3) |
+| Error handling | ADK wraps exceptions | Must catch manually (done in 1.5b block above) |
