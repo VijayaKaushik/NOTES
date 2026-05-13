@@ -1,0 +1,47 @@
+I need to update the planner system prompt in `planner.py` to use this codebase's actual agent names and domain examples instead of the placeholder ones copied from a personal project. Only edit the contents of the `PLANNER_SYSTEM_PROMPT` string and its embedded examples — do not change function signatures, imports, the Pydantic schema, or anything else in planner.py even if you notice issues.
+
+## Files to read first
+
+1. `agents/coach_coordinator/document_agent.md` — what this agent does, inputs, outputs
+2. `agents/coach_coordinator/participant_agent.md` — same
+3. `agents/coach_coordinator/release_agent.md` — same
+4. `agents/coach_coordinator/system_prompt.py` — to understand the workplace coach product's tone and scope
+5. `agents/coach_coordinator/skills_catalogue.json` — the current description-based routing config
+6. `agents/coach_coordinator/agent.py` — current orchestrator, READ-ONLY, only to understand how agents are currently invoked
+7. `agents/coach_coordinator/rag_registry.py` — to see which agents are RAG vs operational
+8. `agents/coach_coordinator/planner.py` — the file to edit
+9. `agents/coach_coordinator/planner_schema.py` — to confirm the `join_key` Literal values
+
+## What to produce
+
+Edit `planner.py` so that:
+
+1. The `PLANNER_SYSTEM_PROMPT` lists each work agent under the correct category (operational vs RAG). Use one-line descriptions paraphrased from the .md files.
+
+2. Replace the home-domain example queries with 4–6 workplace coach examples covering:
+   - A single operational agent route
+   - A single RAG agent route
+   - A cross-agent join (`cross_agent=true` with `step_1`, `step_2`, `join_key`)
+   - A context-dependent follow-up (`requires_context=true` with `context_key`)
+   - An out-of-scope query
+
+3. Update the `join_key` rule (rule 6) for work's actual ID fields. The placeholder version mentions `employee_id` and `grant_id`. If work's domain uses different IDs, infer from the .md files and `skills_catalogue.json`. If unclear, ASK me before guessing.
+
+## Output sequence
+
+Before editing anything, show me:
+- A bulleted summary of each work agent's purpose (one line each, from the .md files)
+- Whether `join_key` Literal in `planner_schema.py` needs to be widened, and with what values
+- A preview of the new example queries
+
+Wait for my "go ahead" before editing.
+
+After I approve and you edit, give me a final summary of exactly what changed in `planner.py` — line ranges or before/after snippets.
+
+## Constraints
+
+- READ-ONLY: `agent.py`, `agentWPversion.py`, `callbacks.py`, everything in `api/`, anything outside `coach_coordinator/`
+- Do NOT run any commands. Do NOT change git state.
+- Do NOT modify `planner_schema.py` in this step (changes to it come in a separate step if needed).
+- If any .md file is ambiguous about what the agent does, ASK me before guessing.
+- If `planner.py` still has Gemini imports (`from google import genai`) rather than OpenAI, STOP and tell me — that's a different step.
