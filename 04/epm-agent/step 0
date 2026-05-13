@@ -1,0 +1,50 @@
+The previous step stopped because planner.py still uses Google Gemini. Before editing the planner's prompt content, swap planner.py's LLM client to match whatever this codebase already uses for LLM calls. I saw LiteLLM in the logs, so it's likely either LiteLLM directly or an internal wrapper around it. Confirm before changing anything.
+
+## Investigation phase — do not edit files yet
+
+1. Search the codebase for how LLM calls are currently made. Look for:
+   - `litellm.completion`, `litellm.acompletion`, or any `from litellm import ...`
+   - Any internal wrapper class (`LLMClient`, `CoachLLM`, `LLMService`, etc.) — likely in `api/service/` or `api/Model/`
+   - How `agent.py` and other working agents in `coach_coordinator/` invoke the LLM
+   - Relevant env vars and where they're loaded
+
+2. For the LLM client this codebase uses, identify:
+   - Import statement
+   - Function/method for a single completion
+   - Whether `response_format` with a Pydantic model is supported (OpenAI structured outputs pattern)
+   - Model name format (`gpt-5`, `openai/gpt-5`, internal alias?)
+   - Auth pattern (env var, config object, initialized client passed around?)
+
+3. Report back BEFORE editing:
+   - The pattern this codebase uses, with a short code snippet from an existing agent showing how it calls the LLM
+   - Whether structured Pydantic output is supported in that pattern
+   - The proposed replacement block for planner.py's Gemini calls — show me the diff
+
+## Decision branches based on what you find
+
+- **If structured outputs ARE supported** (e.g. LiteLLM with `response_format=PlannerOutput`): replace the Gemini call with the structured-output equivalent. Delete the markdown-stripping code — not needed.
+- **If structured outputs are NOT supported**: keep the prompt-based JSON approach (same shape as the home Gemini version), just swap the client. Keep the markdown stripping. Validate with `PlannerOutput.model_validate_json(raw)` as before.
+- **If the existing wrapper doesn't expose what's needed**: tell me, don't bypass it. Going around the wrapper could break auth or violate security policy.
+
+## Scope — only these edits in planner.py
+
+- Replace the Gemini import
+- Replace the client initialization
+- Replace the `generate_content(...)` call and its result parsing
+- Update the model name constant
+- Remove Gemini-specific code only if it's truly no longer needed
+
+DO NOT change:
+- `PLANNER_SYSTEM_PROMPT` content (that's Step 1)
+- `plan()` function signature
+- Pydantic schema imports
+- `_format_rag_agents()` helper
+- planner_schema.py or rag_registry.py
+- Anything outside planner.py
+
+## Constraints
+
+- READ-ONLY: agent.py, agentWPversion.py, callbacks.py, everything outside coach_coordinator/
+- Do NOT run pip install or modify dependencies
+- Do NOT run git commands
+- Wait for my approval before applying the proposed diff
