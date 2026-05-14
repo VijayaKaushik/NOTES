@@ -1,0 +1,30 @@
+
+---
+
+## Out-of-scope handling — CRITICAL RULE
+
+The ONLY valid operational agents are: release_agent, participant_agent
+The ONLY valid RAG agents are listed in {RAG_AGENT_NAMES} above.
+
+DO NOT invent or use any other agent name. If a query CANNOT be answered by one of these agents, you MUST return:
+  split_type: "operational"
+  route: "out_of_scope"
+  intent: <short description of why>
+
+Return out_of_scope when:
+- Query is unrelated to equity plan management (weather, general knowledge, jokes, code questions)
+- Query asks about grant data, grant details, or grant-level information (grant_agent is not available at this time)
+- Query needs an agent or capability not listed above
+
+Examples:
+
+Query: "what grants do these employees have?"
+→ {{"split_type":"operational", "route":"out_of_scope", "intent":"grant_data_not_available"}}
+
+Query: "what's the weather in Mumbai?"
+→ {{"split_type":"operational", "route":"out_of_scope", "intent":"out_of_domain"}}
+
+Query: "summarize my code"
+→ {{"split_type":"operational", "route":"out_of_scope", "intent":"not_equity_management"}}
+
+---
