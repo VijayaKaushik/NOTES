@@ -1,0 +1,56 @@
+Step 1 complete — planner.py now correctly routes for work agents and handles out-of-scope. Step 3: add the planner to agent.py in pure shadow/logging mode. The planner is invoked on every user query and its decision is logged, but it does NOT affect routing. Existing legacy routing continues entirely unchanged.
+
+CRITICAL: agent.py contains all connection details for remote agents — DO NOT touch those.
+
+## Investigation phase — do not edit files yet
+
+1. Read agents/coach_coordinator/agent.py end-to-end and identify:
+   - The function that receives a user query and decides which agent to call (the routing entry point — likely named route_query, handle_query, classify, process, dispatch, or similar)
+   - Exact variable names for: user query string, session/tool_context object, any conversation context available at that point
+   - Whether the function is async or sync
+   - The logging mechanism the file already uses (logger.info, structlog, print, etc.) — match it exactly
+
+2. Read agents/coach_coordinator/planner.py to confirm:
+   - The exact signature of plan() — async or sync, positional vs keyword args
+   - Whether it raises exceptions on failure or returns an error object
+
+3. Report back BEFORE editing:
+   - The exact function name and signature where the shadow call should be inserted
+   - Proposed insertion point (top of function, immediately after which existing line)
+   - The exact code block to add — matching existing logging style and async/sync pattern
+   - Whether `from .planner import plan` needs to be added or is already present
+   - The full proposed diff
+
+## Scope — only this edit in agent.py
+
+Add ONE block at the top of the routing function that:
+- Calls plan() with the user query
+- Passes context={} for now (real context wiring is a later step)
+- Wraps in try/except so any planner failure is logged but does NOT crash routing
+- Logs the planner's decision using the file's existing logging style, with a distinct prefix like "PLANNER_SHADOW" so it's greppable
+- Does NOT use the planner's decision for any routing logic
+
+Add at most ONE import: `from .planner import plan`, only if not already present.
+
+DO NOT change:
+- The existing routing logic, even by one line
+- The function signature of the routing function
+- Any connection details, REST client configuration, or agent endpoint setup
+- Any other function in agent.py
+- planner.py, planner_schema.py, rag_registry.py, context_registry.py
+- Anything outside coach_coordinator/agent.py
+
+## Output sequence
+
+Show investigation report + proposed diff. Wait for my "go ahead" before applying.
+
+After approval and edit:
+- Show the exact diff applied
+- Tell me how to verify: which existing test command runs the orchestrator, and what log line to grep for to confirm shadow mode is firing
+
+## Constraints
+
+- READ-ONLY: everything outside agent.py
+- Do NOT run any commands. Do NOT change git state.
+- If the routing entry point isn't obvious from the code, ASK before guessing.
+- If adding the import would create a circular import, STOP and report — do not bypass.
