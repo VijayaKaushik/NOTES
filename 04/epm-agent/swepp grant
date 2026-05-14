@@ -1,0 +1,6 @@
+Read agents/coach_coordinator/planner.py. In the ROUTING_SYSTEM_PROMPT f-string ONLY (not anywhere else in the file), find every case-insensitive reference to "grant" (grant, grants, grant_id, grant_agent). For each match report:
+- Line number and surrounding context
+- Category: example query / join rule / agent description / other
+- Proposed action: delete entirely OR rewrite (and how)
+
+Do not edit anything yet. After my approval, apply the changes and show me a diff. Do not touch planner_schema.py or anything outside planner.py.
