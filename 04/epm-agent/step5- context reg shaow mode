@@ -1,0 +1,65 @@
+Step 5 — Add automatic context_registry writes after each execute_* tool call. Purely additive: no SYSTEM_MESSAGE changes, no routing changes, no user-facing behavior change. This builds the cross-turn memory infrastructure that Step 6 needs.
+
+## Investigation phase — do not edit files yet
+
+1. Read these files end-to-end:
+   - agents/coach_coordinator/agent.py (all three create_* functions and existing callbacks)
+   - agents/coach_coordinator/callbacks.py (existing callback patterns to mirror)
+   - agents/coach_coordinator/context_registry.py (write_turn and read_registry functions)
+   - api/service/release_manager_service.py, participant_service.py, service_desk_service.py — focus on what each execute_* function RETURNS (dict shape, employee_ids field if any)
+
+2. For each execute_* tool, identify:
+   - The function's return shape
+   - Which field, if any, contains employee_ids or similar useful IDs
+   - Whether the return shape is consistent across normal and error responses
+
+3. Confirm whether smart_sdk's AfterToolCallback gets access to:
+   - The tool name
+   - The tool's return value
+   - The tool_context (for state access)
+   Use existing after_tool_timing_callback as the reference pattern.
+
+4. Report back BEFORE editing:
+   - For each execute_* tool: return shape and field-of-interest for context extraction
+   - Confirmation that AfterToolCallback exposes the tool result
+   - Proposed code for a new async function context_registry_writer(context) in callbacks.py
+   - The proposed diff for agent.py to register it in all three create_* functions
+
+## Scope — only these edits
+
+In callbacks.py, add a new async function context_registry_writer(context) that:
+- Reads the tool name and tool result using the same pattern as after_tool_timing_callback
+- Maps tool names to logical agent names:
+    execute_release_management_query_streaming → "release_agent"
+    execute_participant_query_streaming → "participant_agent"
+    execute_service_desk_query → "service_desk"
+- Best-effort extracts employee_ids from the result (try common field names)
+- Calls write_turn from context_registry with the extracted data
+- Wraps everything in try/except — never crashes the request, only logs warnings on failure
+
+In agent.py, register the new callback in all three create_* functions, immediately after the existing AfterToolCallback(after_tool_timing_callback):
+    agent.add_callback(AfterToolCallback(context_registry_writer))   # writes turn summary
+
+## DO NOT change
+
+- SYSTEM_MESSAGE in system_prompt.py
+- The execute_* tools themselves or their service files
+- The existing planner_shadow_callback or any other existing callback
+- planner.py, planner_schema.py, rag_registry.py, context_registry.py
+- Anything in api/
+
+## Output sequence
+
+Show investigation report + proposed diff. Wait for "go ahead" before editing.
+
+After approval and edit, give me:
+- The exact diff applied
+- How to verify: which session DB to inspect, what context_registry entries should appear after running a query
+
+## Constraints
+
+- READ-ONLY: everything outside agent.py and callbacks.py
+- Do NOT run any commands. Do NOT change git state.
+- If smart_sdk's AfterToolCallback doesn't expose the tool result, STOP and report — we'll find an alternative
+- If a tool's return shape is wildly inconsistent or extraction is unclear, ASK before guessing
+- If extraction fails in the wild, log and skip — never block the response from reaching the user
