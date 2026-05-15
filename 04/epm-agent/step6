@@ -1,0 +1,145 @@
+Step 6 — Promote planner from shadow to driving routing, behind a feature flag (ENABLE_PLANNER_ROUTING). Default OFF means no behavior change. ON means full planner-driven workflow using the home pattern: route_query and update_context as tools, with a new SYSTEM_MESSAGE that acts on their output.
+
+## Investigation phase — do not edit files yet
+
+1. Read these files end-to-end:
+   - agents/coach_coordinator/agent.py (current state after Step 5)
+   - agents/coach_coordinator/system_prompt.py (current SYSTEM_MESSAGE_TEMPLATE)
+   - agents/coach_coordinator/planner.py (Planner class, classify signature, async)
+   - agents/coach_coordinator/context_registry.py (write_turn, read_registry, get_turn_index, get_latest_participant_ids)
+   - agents/coach_coordinator/rag_registry.py (get_rag_agent_names)
+   - agents/coach_coordinator/planner_schema.py (PlannerOutput fields including join_key Literal)
+   - The execute_*_query_streaming functions — signature, sync vs async, parameter names
+
+2. Confirm the route → tool mapping (verify against the .md agent files):
+   - release_agent → execute_release_management_query_streaming
+   - participant_agent → execute_participant_query_streaming
+   - user_guide_agent → execute_service_desk_query (pass rag_query as the query)
+   - document_agent → execute_service_desk_query (pass rag_query as the query)
+   If user_guide_agent and document_agent map to different tools at work, REPORT before proceeding.
+
+3. Report back BEFORE editing:
+   - Tool mapping confirmed (or corrected with reasoning from the .md files)
+   - Proposed full code for route_query and update_context tool functions
+   - Proposed full text of SYSTEM_MESSAGE_V2 (preserve scope/professional/email/output, add ROUTING WORKFLOW)
+   - Proposed diff for agent.py (feature flag branch in each create_* function)
+   - Confirmation that planner_shadow_callback will be skipped when flag is ON (to avoid double planner calls)
+
+## Scope
+
+### In agent.py — add two new async tool functions
+
+route_query(query: str, tool_context) -> dict:
+   - Calls read_registry(tool_context) to get current context
+   - Calls await _planner.classify(query=query, context_registry=context)
+   - Writes a turn entry via write_turn with agent_name from plan.route, intent from plan.intent
+   - Returns the plan as a dict including: status, route, split_type, intent, requires_context, context_participant_ids (read via get_latest_participant_ids), rag_query, operational_query, rag_agent (if combo)
+   - Logs ROUTE_QUERY result for debugging
+
+update_context(agent_name: str, participant_ids: list, tool_context, vesting_date: str = None, batch_id: str = None, summary: str = None) -> dict:
+   - Writes turn summary to context_registry via write_turn
+   - Returns {"status": "success", "turn_recorded": turn_index}
+
+### In each of the three create_* functions, add the feature flag branch
+
+if os.getenv("ENABLE_PLANNER_ROUTING", "false").lower() == "true":
+    tools = [route_query, update_context] + tools          # add new tools at front
+    system_message_to_use = SYSTEM_MESSAGE_V2
+    register_shadow_callback = False                        # route_query is the real call now
+else:
+    system_message_to_use = SYSTEM_MESSAGE                  # unchanged from today
+    register_shadow_callback = True                         # keep shadow active
+
+# Use system_message_to_use when building Agent(...)
+# Only add BeforeAgentCallback(planner_shadow_callback) if register_shadow_callback is True
+
+### In system_prompt.py — add SYSTEM_MESSAGE_V2 alongside existing SYSTEM_MESSAGE_TEMPLATE
+
+PRESERVE from the existing template:
+- Identity, CORE BEHAVIOR RULES
+- SCOPE — IN and SCOPE — OUT lists
+- OUT OF SCOPE RESPONSES (Type 1 and Type 2 canned responses)
+- {client_id} reference
+- Available Agents section (release_agent, document_agent, participant_agent doc blocks) — retitle "Available Agents (reference only — routing comes from route_query)"
+- EMAIL DRAFTING RULES
+- Agent Response Handling
+- PROFESSIONAL STANDARDS
+- OUTPUT REQUIREMENTS
+- {session_id} reference
+
+REMOVE entirely from V2:
+- "How to make the best routing decision" section (keyword analysis, agent description matching)
+- "How to prepare your question to the agents" section (Golden rule, exceptions)
+
+ADD a new section between SCOPE — OUT and Available Agents, called "ROUTING WORKFLOW":
+
+STEP 1: Always call route_query FIRST for every user message.
+
+If route_query throws an error or returns malformed output:
+- Log the failure
+- Fall back to legacy description-based routing for this one query (analyze the agent capabilities below and decide based on descriptions)
+- Do NOT block the user's query on a planner failure
+
+STEP 2: Act on split_type strictly:
+
+  out_of_scope → respond with the appropriate canned out-of-scope message above, no tool call
+
+  rag → map the route field to its tool:
+    - user_guide_agent → execute_service_desk_query (pass rag_query as the query)
+    - document_agent → execute_service_desk_query (pass rag_query as the query)
+    Present the agent's answer directly. Do NOT call update_context for RAG.
+
+  operational → map the route field to its tool:
+    - release_agent → execute_release_management_query_streaming
+    - participant_agent → execute_participant_query_streaming
+    For requires_context=true:
+    - If context_participant_ids is non-empty: append "Filter to participant_ids: [list]" to the user query before sending to the agent
+    - If context_participant_ids is empty: send the user's query as-is. Do NOT tell the user "no prior context found" — just answer the query without applying a filter. The conversation should feel natural even when context is sparse.
+    After the agent returns, call update_context (see below).
+
+  combo → route_query returns: rag_agent, rag_query, operational_query
+    - Step A: call the RAG tool with rag_query (same RAG mapping as above)
+    - Step B: call the operational tool with operational_query (same operational mapping; apply requires_context handling as above)
+    - Present both with section labels:
+        ## [Guide Answer]
+        [RAG agent response]
+        ---
+        ## [Data Answer]
+        [operational agent response]
+    - Call update_context after the operational tool completes.
+
+WHEN CALLING update_context AFTER AN OPERATIONAL AGENT RETURNS:
+- Read the agent's response carefully — both the "answer" text AND any entries in "actions"
+- Extract any participant_id values mentioned in the response
+- Pass them as the participant_ids list argument to update_context
+- This is the primary mechanism for building cross-turn context.
+  Do this diligently on every operational agent call — without it,
+  follow-up queries lose their ability to filter to specific
+  participants.
+
+CRITICAL — ALWAYS use the route field from route_query when route_query has returned a valid plan. NEVER decide routing on your own based on agent descriptions in that case. NEVER hardcode agent names in your reasoning. New agents can be added to the system without changing your instructions.
+
+## DO NOT change
+
+- The execute_* tools or their service files
+- planner.py, planner_schema.py, rag_registry.py, context_registry.py
+- The existing SYSTEM_MESSAGE_TEMPLATE (leave intact — SYSTEM_MESSAGE_V2 is a sibling, not a replacement)
+- Step 5's context_registry_writer callback (it keeps running in both modes)
+- Anything in api/
+
+## Output sequence
+
+Show investigation report + proposed code for both tools + proposed SYSTEM_MESSAGE_V2 text + proposed diff for agent.py. Wait for "go ahead" before editing.
+
+After approval and edit, give me:
+- The exact diff applied
+- For Flag OFF: list 3 queries to run that should produce byte-identical responses to before; include the exact log lines that should NOT appear (e.g., no ROUTE_QUERY entries — only PLANNER_SHADOW + CONTEXT_REGISTRY)
+- For Flag ON: list 5 queries covering each split_type — operational, rag, combo, out_of_scope, and a context follow-up where participant_ids is EMPTY in the prior turn (to verify graceful skip). For each query, give the exact log lines to expect and the exact context_registry state changes to verify in Postgres.
+
+## Constraints
+
+- READ-ONLY: everything outside agent.py and system_prompt.py
+- Do NOT run any commands. Do NOT change git state.
+- Feature flag MUST default to "false" so the deploy is a no-op until I explicitly enable it
+- If route → tool mapping is unclear (especially user_guide_agent vs document_agent), STOP and ask
+- Match the codebase's existing patterns for async, parameter naming, and logging
