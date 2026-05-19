@@ -1,0 +1,114 @@
+Update the planner's routing philosophy so it stops returning route="context_only" for queries that ask for new data attributes about previously-seen participants. New rule: always route to an agent, and rephrase comparison queries into self-contained operational queries. Do NOT remove context_only from the schema or codebase — this is a prompt-only change, leaving context_only as a no-op path the planner will simply never choose.
+
+## Investigation phase — do not edit yet
+
+1. Read agents/coach_coordinator/planner.py — focus on the full ROUTING_SYSTEM_PROMPT f-string. Identify:
+   - All lines/sections that currently reference context_only
+   - All existing examples that produce context_only routes
+   - The section where examples are listed
+
+2. Read agents/coach_coordinator/context_registry.py briefly to understand what's stored per turn (intent, summary, participant_ids).
+
+3. Report back BEFORE editing:
+   - All current context_only references in the prompt (line numbers/snippets)
+   - Proposed replacement text and where it goes
+   - Proposed diff
+
+## Scope — edit only ROUTING_SYSTEM_PROMPT in planner.py
+
+ADD a new rule near the top of the prompt (after split_type definitions, before existing routing rules):
+
+```
+ROUTING PHILOSOPHY: Always route the query to an agent that can answer
+it with current data. Do NOT use route="context_only".
+
+If a query references prior turns ("these participants", "the same
+people", "both releases", "common across", "of them", etc.), REPHRASE
+it into a self-contained operational_query that names the comparison
+sets explicitly using subjects from prior turns. Then route to the
+appropriate agent with the rephrased query in operational_query.
+
+When rephrasing, use specific subject names from prior turns' intent
+or summary fields (e.g., "the June release" not "the previous
+release"). If the prior turn's subject isn't clear from context,
+fall back to route=operational with requires_context=true and let
+the agent handle the ambiguity.
+```
+
+REPLACE existing context_only examples with these rephrase examples:
+
+```
+Prior turn: "Show participants in June release"
+User: "How many of them are also in the May release?"
+→ rephrase: "How many participants in the June release are also
+  in the May release?"
+→ split_type: "operational", route: "release_agent"
+→ operational_query: <the rephrased query>
+
+Prior turns: May release listed, June release listed
+User: "Are these the same participants?"
+→ rephrase: "Are the participants in the May release the same as
+  the participants in the June release?"
+→ split_type: "operational", route: "release_agent"
+→ operational_query: <the rephrased query>
+
+Prior turns: May release, June release
+User: "Which participants are in both releases?"
+→ rephrase: "Which participants are in both the May release and
+  the June release?"
+→ split_type: "operational", route: "release_agent"
+→ operational_query: <the rephrased query>
+
+Prior turn: release listed
+User: "What is their employment status?"
+→ split_type: "operational", route: "release_agent"
+→ requires_context: true (no rephrase needed; agent can handle "their")
+→ operational_query: "What is the employment status of these participants?"
+```
+
+PRESERVE everything else: scope rules, agent descriptions, RAG handling, combo handling, operational handling with requires_context=true, out_of_scope rules.
+
+## Safety net — add to agent.py route_query function (recommended)
+
+Immediately after the planner returns its decision, add:
+
+```python
+if plan.get("route") == "context_only":
+    logger.warning(
+        f"PLANNER returned context_only despite philosophy rule; "
+        f"falling back. query={query!r}"
+    )
+    return {
+        "status": "error",
+        "fallback_to_legacy": True,
+        "message": "planner produced unsupported route"
+    }
+```
+
+This catches any cases where the planner ignores the new rule. SYSTEM_MESSAGE_V2's existing "fall back to legacy routing on route_query failure" rule handles this gracefully.
+
+## DO NOT change
+
+- planner_schema.py (context_only stays in the schema)
+- The context_only handling branch elsewhere in route_query (leave as dead code for later cleanup)
+- system_prompt.py
+- Any other file
+
+## Output sequence
+
+Show the lines proposed to add/replace in ROUTING_SYSTEM_PROMPT, plus the safety-net block in route_query. Wait for "go ahead" before applying.
+
+After approval and edit, suggest 4 test queries that previously triggered context_only — verify they now get rephrased and routed to an agent:
+1. A follow-up asking for a new attribute on prior participants ("what is their employment status")
+2. A comparison between two prior turns ("which are in both")
+3. A "are these the same" query
+4. A vague pronoun query requiring context inference
+
+For each, give the expected PLANNER_SHADOW output: split_type, route, and the exact operational_query rephrased text.
+
+## Constraints
+
+- READ-ONLY: everything except planner.py and agent.py
+- Do NOT run any commands. Do NOT change git state.
+- Do NOT remove context_only from planner_schema.py or remove the dead code path in route_query
+- If ROUTING_SYSTEM_PROMPT has multiple disjoint sections referencing context_only, ASK before deciding which to remove vs keep
