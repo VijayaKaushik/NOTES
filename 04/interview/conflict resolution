@@ -1,0 +1,82 @@
+BATNA
+
+not sureThis is actually a core scenario in this job, so it’s good we work through it.
+
+They’re testing one thing: can you balance business pressure with regulatory reality without breaking relationships or momentum?
+
+Let’s build the thinking first, then I’ll give you a clean answer you can use.
+
+What’s really happening in this scenario
+
+You have 3 forces in tension:
+
+FinTech wants more data
+for better product experience / differentiation
+Compliance/legal says “higher risk”
+data minimization, consent scope, liability
+Chase wants ecosystem growth
+but cannot violate trust/regulation
+
+So your job is NOT to pick one side.
+
+Your job is to reframe the problem so both can move forward safely.
+
+What strong product leaders do here
+
+They do 4 things:
+
+1. Don’t say yes or no immediately
+
+They translate the request into:
+
+what data is actually needed?
+what use case justifies it?
+what’s the minimum viable access?
+2. Break “big request” into controlled options
+
+Instead of:
+
+“full transaction access”
+
+You create tiers:
+
+aggregated / categorized transactions
+time-bound access
+purpose-limited access
+tokenized / masked fields
+3. Bring compliance in early as design partner (not gatekeeper)
+
+You don’t negotiate after the fact.
+
+You co-design:
+
+consent scopes
+audit logs
+user transparency
+revocation controls
+4. Propose an experiment, not a permanent decision
+pilot with limited cohort
+A/B risk + usage
+measure fraud / drop-off / engagement
+Strong interview answer (you can use this)
+
+“In that situation, I would not treat it as a binary yes or no between product and compliance. I would reframe it as a design problem around how we can enable the business use case with the minimum necessary data exposure.
+
+I would first break down the FinTech requirement to understand the exact customer outcome they are trying to achieve, and then explore whether that can be supported through more constrained data access models such as scoped permissions, tokenized data, or aggregated transaction insights instead of raw transaction feeds.
+
+I would partner closely with legal and compliance early in the design process rather than at approval stage, so that risk controls like consent granularity, auditability, and revocation are built into the solution itself.
+
+Finally, I would propose a phased rollout or pilot approach to validate both customer value and risk exposure in a controlled environment before scaling.”
+
+What this answer signals
+You don’t polarize business vs compliance
+You think in controlled system design
+You use progressive rollout thinking
+You understand open banking = consent architecture, not just APIs
+Next question (this is closer to real interview pressure)
+
+You are now responsible for the Open Banking API platform.
+
+How would you measure success of this product in the first 12 months?
+
+Give me your first attempt—even if it’s rough.
