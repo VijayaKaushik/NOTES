@@ -1,24 +1,59 @@
-What they actually want to hear
+Strong OKR structure (what good looks like)
 
-For Open Banking, success is not just:
+Instead of just saying “OKRs,” you say:
 
-“we shipped APIs”
-“we wrote OKRs”
+Objective 1: Build trusted and secure data sharing for customers
 
-It is measured across 4 dimensions:
+Key Results:
 
-1. Customer trust & control
+% of customers actively managing consent (not just passive opt-in)
+Reduction in consent-related support issues
+Time taken to revoke or modify permissions
+Objective 2: Drive FinTech and aggregator adoption of APIs
 
-Because this is a regulated data-sharing product
+Key Results:
 
-2. Ecosystem adoption
+Number of active third-party integrations
+API call volume / active usage per partner
+Time to onboard a new FinTech partner
+Objective 3: Ensure platform reliability and compliance
 
-Are FinTechs actually using it?
+Key Results:
 
-3. Platform reliability & security
+API uptime / latency SLAs
+Number of security or compliance incidents (target: near zero)
+Audit readiness / successful compliance reviews
+Objective 4: Improve developer experience
 
-Is it safe and stable at scale?
+Key Results:
 
-4. Developer experience (critical for API platforms)
+Developer onboarding time (sandbox → production)
+API error rate / integration failure rate
+Developer satisfaction score (NPS or feedback loop)
+Now here is your upgraded interview answer
 
-Is integration easy or painful?
+You can say:
+
+“I would define success using OKRs across four dimensions. First, customer trust and control—measuring how effectively users understand and manage consent, including revocation behavior and reduction in consent-related friction.
+
+Second, ecosystem adoption—tracking active FinTech integrations, API usage, and time-to-onboard new partners to ensure the platform is actually scaling.
+
+Third, platform reliability and compliance—ensuring strong SLAs around uptime, low incident rates, and audit readiness since this is a regulated data-sharing product.
+
+And finally, developer experience—measuring onboarding time, API error rates, and developer satisfaction to ensure the ecosystem can scale efficiently.”
+
+Why this works
+
+This signals:
+
+You understand platform thinking (not feature thinking)
+You balance customer + ecosystem + risk
+You think in measurable adoption loops
+You understand API businesses = developer experience businesses
+Next question (this is where they go deeper)
+
+Let’s go into real execution:
+
+How would you design a customer consent flow for Open Banking so that it is both compliant and easy to use?
+
+(Think: what screens, what decisions, what friction points?)
