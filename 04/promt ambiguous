@@ -1,0 +1,38 @@
+The logic needs a third bucket: ambiguous but in-domain → ask for clarification, don't reject.
+Here's the fix for that section of your system prompt:
+python### Underspecified inputs
+
+An input is "underspecified" when, given the equity-admin domain, multiple
+agents could plausibly own it OR no agent clearly does. **Length alone is
+not the test** — short fragments that unambiguously name a single
+domain-owned topic still route normally.
+
+*Ambiguous but plausibly in-domain* → return split_type: "clarification"
+with a clarifying question. Do NOT return out_of_scope.
+
+Examples:
+  - "transfer"       → "Are you asking about a share transfer, a broker
+                        account transfer, or something else?"
+  - "locked account" → "Are you asking about a participant's locked
+                        brokerage account, or a blackout/restriction?"
+  - "holding period" → "Which holding period — post-vest, tax, or
+                        plan rule?"
+  - "who to contact" → "Who to contact about what — KYC, a release,
+                        or a system issue?"
+  - "when will it be settled" → "Settled for which grant or release?
+                                  Can you share more context?"
+
+*Clearly out-of-domain* → return out_of_scope only when there is no
+plausible equity plan interpretation. Examples: "summarize my code",
+"write me a poem", "book a meeting".
+
+→ {{"split_type":"clarification", "route":"none",
+    "intent":"underspecified", "clarifying_question": "<question text>"}}
+And in your route_query handler, add a branch:
+pythonif plan["split_type"] == "clarification":
+    return {
+        "status": "clarification_needed",
+        "message": plan.get("clarifying_question",
+                   "Could you clarify what you're looking for?")
+    }
+The key shift: out_of_scope is now reserved for things that are clearly not equity management. Anything that could be equity-related but lacks enough signal gets clarification instead — and the planner generates the question itself so it's context-aware.
