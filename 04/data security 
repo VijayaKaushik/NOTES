@@ -1,0 +1,93 @@
+This is how I would answer it in an MD interview.
+
+
+---
+
+> My first priority would be customer protection and understanding the scope of the incident.
+
+Even though the breach occurred within the fintech's environment, customers will not distinguish between the fintech and the bank. Their trust in the ecosystem is what is at risk.
+
+Within the first few hours, I would activate the incident response process and establish a cross-functional war room involving security, legal, risk, compliance, communications, and engineering teams.
+
+Next, I would work with the fintech to determine exactly what data was exposed, how many customers were affected, whether the breach is ongoing, and whether access should be suspended immediately.
+
+In parallel, I would assess our contractual obligations, regulatory notification requirements, and customer communication requirements.
+
+Once we have validated facts, I would ensure timely and transparent communication to leadership, regulators where required, partners, and affected customers.
+
+After containment, I would lead a review of what controls failed, whether our onboarding and monitoring processes should change, and whether additional security requirements should be introduced for third-party partners.
+
+Ultimately, my goal is not only to manage the incident but to preserve customer trust. In Open Banking, customers trust us with their financial data, and they expect us to hold partners to the same standards we hold ourselves.
+
+
+
+
+---
+
+Why this answer works
+
+It shows the MD that you're thinking like a Product Director:
+
+1. Customer first
+
+> Protect customers and trust.
+
+
+
+2. Incident management
+
+> Cross-functional response.
+
+
+
+3. Facts before conclusions
+
+> Understand impact and scope.
+
+
+
+4. Executive leadership
+
+> Coordinate risk, legal, compliance, communications.
+
+
+
+5. Long-term improvement
+
+> Learn and strengthen controls.
+
+
+
+
+---
+
+Then the MD will likely push:
+
+> "Vijaya, the breach happened at the fintech, not at JPMorgan. Why should we take responsibility?"
+
+
+
+A strong response:
+
+> While we may not be responsible for causing the breach, we are accountable for the ecosystem we enable.
+
+Customers granted access to their financial data because they trusted the Open Banking experience associated with our platform.
+
+If customers lose trust in that ecosystem, adoption suffers regardless of where the breach occurred.
+
+My focus would be protecting customers and preserving trust, not debating ownership of the incident.
+
+
+
+That answer is very senior and aligns well with the Product Director mindset they're looking for.
+
+
+---
+
+One thing I'd expect tomorrow is at least one question around:
+
+> "How do you balance innovation and security?"
+
+
+
+because your resume strongly signals AI, governance, and financial services. Make sure your answers consistently show that you're not just protecting against risk—you are enabling growth while managing risk. That's the distinction between a governance lead and a Product Director.
