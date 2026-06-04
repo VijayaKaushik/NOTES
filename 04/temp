@@ -1,0 +1,374 @@
+Perfect. Based on your resume and the questions you've already encountered, I would expect the MD interview to focus less on AI technology itself and more on:
+
+1. Product thinking
+
+
+2. Open Banking strategy
+
+
+3. Executive communication
+
+
+4. Data sharing and trust
+
+
+5. Vendor evaluation
+
+
+6. Operating at MD-level influence
+
+
+7. How your AI background translates into product leadership
+
+
+
+The MD will likely test whether you're a product leader who understands AI, not an AI leader who wants to become a product manager.
+
+
+---
+
+Interview Structure (30 min)
+
+First 5 mins
+
+"Tell me about yourself"
+
+You need a 2-minute executive version:
+
+> I have spent 18 years in financial services across JPMorgan, Bank of America, HSBC and Lloyds, primarily building data products and analytics capabilities.
+
+In my current role, I lead AI initiatives for Workplace Solutions and Performance Analytics where I've built agentic AI solutions for RFP automation, client intelligence, service chatbots and governance frameworks.
+
+Prior to AI, I spent several years as a data product owner in Asset & Wealth Management responsible for enterprise fee governance and regulatory analytics.
+
+What excites me about Open Banking is that it sits at the intersection of three areas I've worked in throughout my career: data products, customer trust and AI-enabled experiences. I believe Open Banking is one of the biggest platform shifts occurring in financial services, and I see an opportunity to bring my experience in data strategy, governance and AI to help build products that create meaningful customer value while maintaining trust and regulatory rigor.
+
+
+
+
+---
+
+Question 1 (MD Level)
+
+This is exactly the type of question I expect tomorrow.
+
+> "Vijaya, many companies claim customers own their data and should be able to share it freely. As an Open Banking product leader, how would you determine whether a company is asking for too much data?"
+
+
+
+Answer as if you're in the interview.
+
+Keep it to 2-3 minutes.
+
+I'll then critique it like a tough MD and ask follow-up questions.
+
+When you're ready, answer Question 1. After that, type Q and I'll hit you with the next MD-level question.
+
+Good start. You're touching on purpose limitation, which is exactly one of the core Open Banking principles. But an MD will likely push for more depth and structure.
+
+If I were the MD, my reaction would be:
+
+> "Okay, but how would you operationalize that? Every vendor will tell you the data is needed for the customer experience."
+
+
+
+Your answer needs a framework.
+
+Try something like:
+
+> The first principle I would use is data minimization. Every data element requested should map to a specific customer benefit or product capability.
+
+For example, if a budgeting app needs transaction history to categorize spending, that is directly tied to the service being provided. However, if the same app requests investment holdings, mortgage information, or several years of transaction history, I would ask what customer outcome requires that data.
+
+Second, I would evaluate proportionality. Is the amount, frequency, and duration of data access aligned with the service being delivered? Sometimes aggregated balances are sufficient, while other use cases may require detailed transaction data.
+
+Third, I would ensure transparency and consent. Customers should clearly understand what data is being shared, why it is needed, how long it will be retained, and whether it will be used for purposes beyond the requested service.
+
+Finally, I would establish governance controls through data-sharing agreements, audits, monitoring, and periodic reviews to ensure the vendor continues using the data only for the approved purpose.
+
+Ultimately, my test is simple: if I cannot clearly explain to a customer why each data element is necessary and how it benefits them, then we are likely over-sharing.
+
+
+
+
+---
+
+MD Follow-up (harder)
+
+Now imagine I push back:
+
+> "A personal financial management app says they need five years of transaction history because more data creates better AI-driven recommendations. The customer has consented. Would you allow it?"
+
+
+
+Give me your answer.
+
+Remember:
+
+Don't jump straight to "yes" or "no".
+
+Think product, risk, customer trust, and AI.
+
+2 minutes max.
+
+
+
+This is a solid answer from someone with your AI governance background, but if you're interviewing with a Tech MD, I'd challenge you on one thing:
+
+You moved too quickly into controls and risk.
+
+MDs typically want to hear the product judgment first, then governance.
+
+
+---
+
+What I liked
+
+You naturally brought in:
+
+Customer consent
+
+Data classification and sensitivity
+
+Encryption and security controls
+
+Restrictions on onward sharing
+
+AI model training consent
+
+Understanding vendor architecture
+
+
+These are all strong signals for someone who has actually dealt with AI governance and third-party risk.
+
+
+---
+
+What is missing
+
+You never directly answered:
+
+> "Do we need five years of data?"
+
+
+
+The MD may think:
+
+> "Vijaya gave me a governance answer but not a product answer."
+
+
+
+
+---
+
+Stronger MD-Level Answer
+
+I would combine your thinking with product judgment:
+
+> Customer consent is necessary, but consent alone is not sufficient.
+
+My first question would be whether five years of history is actually required to deliver the customer outcome.
+
+If the vendor can demonstrate that recommendation quality materially improves between one year and five years of history, then I would evaluate the tradeoff between customer value and incremental privacy risk.
+
+I would also explore whether the same outcome can be achieved through a phased model—for example, starting with twelve months of data and allowing customers to opt into deeper history if they see value.
+
+Beyond the product justification, I would evaluate how the data is protected. I would want to understand their security architecture, encryption standards, retention policies, subcontractor relationships, and whether customer data is used for model training.
+
+Finally, I would ensure that customers understand not only what they are sharing, but why they are sharing it and what benefit they are receiving in return.
+
+In Open Banking, trust is a product feature. The goal is not to maximize data collection; it is to maximize customer value while minimizing unnecessary data exposure.
+
+
+
+That last line is very MD-level.
+
+
+---
+
+Feedback Specific to You
+
+One pattern I see in your answers:
+
+Because of your background in AI governance, data science, and controls, you instinctively answer from the risk perspective.
+
+For this role, force yourself into this order:
+
+1. Customer value
+
+
+2. Product outcome
+
+
+3. Data needed
+
+
+4. Risk & controls
+
+
+5. Governance
+
+
+
+If you answer in that sequence, you'll sound like a Product Director rather than an AI governance lead.
+
+
+---
+
+Next MD Question
+
+> Open Banking APIs occasionally go down.
+
+A major fintech partner calls and says:
+
+"Your API outage prevented 100,000 customers from accessing our application today."
+
+As the Product Director responsible for Open Banking, what do you do in the first 24 hours?
+
+
+
+Answer as if you're in the interview.
+
+I will grill it like an MD afterward.
+
+
+I'm going to be tough because that's what the MD will do.
+
+My assessment: 5.5/10
+
+Your answer demonstrates:
+
+Risk awareness
+
+Vendor management experience
+
+Understanding of contracts and SLAs
+
+
+But you missed the most important thing:
+
+You didn't take ownership of the incident.
+
+The question was:
+
+> "100,000 customers could not access their application because of your API outage."
+
+
+
+The MD is trying to assess whether you'll behave like an executive during a production incident.
+
+
+---
+
+What the MD hears
+
+You started with:
+
+> evaluate the cause
+
+
+
+Good.
+
+Then:
+
+> evaluate whether the vendor's claim is credible
+
+
+
+Dangerous.
+
+An MD might think:
+
+> "Why are we debating credibility when customers are down?"
+
+
+
+The first 24 hours are not about proving the fintech wrong.
+
+They're about:
+
+1. Restoring service
+
+
+2. Understanding impact
+
+
+3. Communicating transparently
+
+
+4. Protecting customer trust
+
+
+
+
+---
+
+What a Product Director answer sounds like
+
+> My first priority would be establishing facts.
+
+I would immediately engage engineering, SRE, and operations teams to determine whether the outage originated within our platform, identify the affected APIs, and estimate the scope of customer impact.
+
+While engineering is working on restoration, I would establish a communication cadence with the fintech partner. Even if we don't yet know the root cause, I want them hearing updates directly from us rather than discovering issues themselves.
+
+Once service is stabilized, I would assess customer impact: how many API calls failed, which customer journeys were affected, and whether any regulatory or contractual obligations were triggered.
+
+I would then coordinate with legal, risk, and communications teams if the incident met escalation thresholds.
+
+Finally, after recovery, I would lead a postmortem focused on root cause, prevention measures, and resilience improvements so that both our teams and our partners have confidence that the issue will not recur.
+
+In Open Banking, reliability is part of the product. Customers may never see the API, but they experience every outage.
+
+
+
+Notice the structure:
+
+Restore → Communicate → Assess Impact → Escalate → Prevent Recurrence
+
+That's the framework MDs like.
+
+
+---
+
+Coaching Specific to You
+
+Your biggest risk tomorrow is not AI knowledge.
+
+It's that you naturally answer as:
+
+Data Science Lead
+
+Governance Lead
+
+Program Manager
+
+
+The MD is hiring a Product Director.
+
+When you answer, keep asking yourself:
+
+> "What decision am I making on behalf of the customer?"
+
+
+
+That shifts your answer into product leadership.
+
+
+---
+
+Hard Follow-up (MD Level)
+
+I'm the MD now:
+
+> "Vijaya, your engineering team tells you that achieving 99.99% API uptime will cost $15M per year.
+
+Today we're operating at 99.9%.
+
+Should we spend the money? How would you make that decision?"
+
+
+
+This is exactly the type of prioritization question senior product leaders get.
+
+Answer it. Don't rush to yes or no. Think customer impact, economics, trust, competitive positioning, and regulation.
