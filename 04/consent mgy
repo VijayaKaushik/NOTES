@@ -1,0 +1,163 @@
+Excellent. Consent management is one of the most likely areas for an Open Banking Product Director interview because it sits at the intersection of:
+
+Customer trust
+
+Product design
+
+Regulation
+
+Data governance
+
+Fintech ecosystem
+
+
+Here's an MD-level question:
+
+
+---
+
+Consent Management Question
+
+> Vijaya, one of our fintech partners is complaining that our consent flow is too restrictive.
+
+Customers must:
+
+1. Authenticate with the bank
+
+
+2. Review the data being shared
+
+
+3. Select data categories
+
+
+4. Approve the duration of access
+
+
+5. Confirm consent
+
+
+
+The fintech argues that every additional step reduces conversion and customer acquisition.
+
+They want a single-click consent experience.
+
+As Product Director, how would you decide whether to simplify the consent flow?
+
+
+
+
+---
+
+What the MD is evaluating
+
+They want to see whether you can balance:
+
+Customer experience
+
+Conversion rates
+
+Customer trust
+
+Regulatory expectations
+
+Data minimization
+
+Partner adoption
+
+
+
+---
+
+Bonus Follow-Up (Expect this)
+
+After you answer, I may ask:
+
+> The fintech presents data showing that simplifying the flow increases account-linking conversion by 35%.
+
+However, customer complaints about unexpected data sharing increase by 20%.
+
+Which metric matters more and how do you make the tradeoff?
+
+
+
+Go ahead and answer the first question as if you're in the interview. Keep it to about 2 minutes.
+
+
+
+
+This is how I would answer it tomorrow.
+
+Notice the structure:
+
+Customer → Business → Risk → Decision
+
+
+---
+
+> I would start by understanding the objective.
+
+The fintech is optimizing for conversion, while the bank is optimizing for customer trust and informed consent. My responsibility is to find the right balance rather than automatically choosing one side.
+
+First, I would analyze the funnel to determine where customers are dropping off. Are they abandoning because the process is genuinely complex, or because the value proposition is unclear?
+
+Second, I would evaluate which steps are essential for informed consent and which are creating unnecessary friction. For example, I would be reluctant to remove visibility into what data is being shared or for how long, because those are fundamental elements of customer control.
+
+Third, I would explore alternative designs that simplify the experience without reducing transparency. Examples might include clearer language, progressive disclosure, better UX, pre-selected options with clear explanations, or streamlined authentication.
+
+I would also run controlled experiments and measure both conversion rates and customer trust metrics.
+
+Ultimately, my goal would not be to maximize clicks. In Open Banking, consent is not a compliance checkbox; it is the foundation of customer trust. I would support simplification if customers remain informed and in control of their data.
+
+
+
+
+---
+
+If the MD asks the follow-up
+
+> Simplified consent increases conversion by 35%, but complaints about unexpected data sharing increase by 20%. Which metric matters more?
+
+
+
+A strong answer:
+
+> Neither metric should be viewed in isolation.
+
+The increase in conversion demonstrates business value, but the increase in complaints suggests customers may not fully understand what they are consenting to.
+
+In Open Banking, trust is difficult to earn and easy to lose. A short-term increase in conversions can create long-term damage if customers feel surprised by how their data is being used.
+
+My preference would be to identify the root cause of the complaints and redesign the consent experience to preserve most of the conversion gains while improving customer understanding.
+
+If I had to choose between maximizing conversion and preserving informed consent, I would prioritize informed consent because sustainable growth depends on customer trust.
+
+
+
+
+---
+
+MD Tip
+
+The sentence that will make you sound like a Product Director is:
+
+> "The goal is not to maximize consent; the goal is to maximize informed consent."
+
+
+
+That's the type of statement senior leaders remember.
+
+
+---
+
+One more consent question that is even harder
+
+> A customer granted consent to a budgeting app two years ago and has not logged into the app since.
+
+The app continues to pull transaction data every day under the original consent.
+
+Should the consent remain valid, or should it expire automatically?
+
+
+
+Answer this one yourself. It's exactly the kind of judgment question a Tech MD may ask.
