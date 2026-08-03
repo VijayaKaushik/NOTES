@@ -1,0 +1,23 @@
+Here's a clean summary of where things stand:
+
+**Externalization status — 4 agents**
+
+- **Workplace Coach** — Classified as *Model*. Requires a full MRGR review. Team is coordinating with the MRGR team to get it prioritized.
+- **Navigation Agent** — Confirmed by MRGR as *ETND* — no MRGR review or testing required. Approval to go external will instead be handled by the CoE (Center of Excellence) core team.
+- **Release Agent** — Classified as *ET*. Currently running in the fraud pilot.
+- **Participant Agent** — Still under evaluation by the MRGR team, who are deciding whether it should be classified *ET* or *Model*.
+
+**Open questions for the MRGR team**
+1. Since Coach is a Model (full review) while others may be ETND, how will testing be handled consistently across all agents once they're marked ready?
+2. What are the concrete next steps for each agent given their differing classifications?
+
+**Release Agent — externalization path**
+Need to determine the right process to move it from the fraud pilot to external:
+- Stand it up as a new Luma use case, **or**
+- Route the existing internal use case through change management
+
+---
+
+A couple of terms I inferred phonetically from the dictation — "ETND" and "CoE core team" — worth double-checking against whatever the MRGR team's official terminology is before this goes out.
+
+I've saved the project structure (agents, classifications, open questions) to memory so I can pick this up with you next time.Saved — let me know if you want this turned into a slide or doc for a status update, or if you want me to tighten the open questions before you send them to the MRGR team.
