@@ -1,0 +1,11 @@
+Agent	Classification	Review Status	Approval Path	Notes
+Workplace Coach	Model	Requires full MRGR review	MRGR team	Team coordinating with MRGR to get it prioritized
+Navigation Agent	ETND	No MRGR review/testing needed	CoE core team	Confirmed by MRGR
+Release Agent	ET	Under review	TBD	Currently in fraud pilot; externalization path (new Luma use case vs. internal use case via change management) still to be decided
+Participant Agent	Undetermined (ET or Model)	Being evaluated by MRGR	TBD	MRGR still deciding classification
+
+Open questions for the MRGR team
+
+#	Question
+1	Given Coach is Model while others may be ETND, how will testing be handled consistently across all agents once marked ready?
+2	What are the concrete next steps for each agent given their differing classifications?
