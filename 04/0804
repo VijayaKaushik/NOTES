@@ -213,3 +213,589 @@ EPM-validation language on vesting batches.
 12. Return to the governance group with the completed assessments, documented controls, security findings, and data-readiness decision before external launch.
 
 
+Tech RCA / AI Governance Review Summary
+
+Overall outcome
+
+The meeting was positive. The reviewer repeatedly mentioned that the application is well built and that there were no immediate blockers from a governance perspective. The focus shifted from fixing code to collecting evidence that satisfies JPMorgan's AI governance process.
+
+
+---
+
+Main topics discussed
+
+1. Purpose of the review
+
+The reviewer explained that the goal is not to find reasons to reject the application, but to identify issues that governance reviewers may object to later.
+
+The objective is to:
+
+identify potential objections early
+
+prepare documentation
+
+avoid Tech RCA rejection
+
+
+
+---
+
+2. Overall assessment of Workplace Coach
+
+Positive feedback:
+
+Built using Smart SDK
+
+Architecture looks solid
+
+Agent implementation looks good
+
+First implementation reviewed that correctly uses Smart SDK
+
+No major governance concerns found during initial review
+
+
+Reviewer specifically praised:
+
+> "Fantastic."
+
+
+
+> "This is actually really solid."
+
+
+
+> "You're the first one I've gone through who's actually done that all correctly."
+
+
+
+
+---
+
+3. Security review vs Governance review
+
+The reviewer separated two different reviews.
+
+Current review
+
+Tech RCA / Governance review
+
+Purpose:
+
+satisfy governance requirements
+
+complete 52-question spreadsheet
+
+collect evidence
+
+
+Future review
+
+Separate security review
+
+Will include:
+
+anti-pattern scan
+
+architecture weaknesses
+
+security best practices
+
+
+The reviewer explicitly said:
+
+> I don't want to slow you down today.
+
+
+
+
+---
+
+4. AI Governance Spreadsheet
+
+One of the biggest discussion points.
+
+There are:
+
+52 governance questions
+
+every answer requires evidence
+
+
+The reviewer explained:
+
+This spreadsheet is primarily an evidence collection platform for auditors.
+
+Not necessarily improving security.
+
+Instead it proves:
+
+architecture exists
+
+business justification exists
+
+reviews happened
+
+testing happened
+
+guardrails exist
+
+
+You summarized this well yourself:
+
+> "It's basically an evidencing platform."
+
+
+
+The reviewer agreed.
+
+
+---
+
+Major findings
+
+1. Blueprint Registry / Luma registration
+
+This became the largest open governance question.
+
+Current situation:
+
+Originally Workplace Coach was:
+
+internal
+
+normal Luma
+
+
+Later it became:
+
+external
+
+registered as a Model
+
+
+Because of that:
+
+Current Luma contains:
+
+model registration
+
+
+Previous Luma contains:
+
+blueprint registry
+
+
+Potential governance issue:
+
+Auditors may open the new Luma and not find blueprint registrations.
+
+Reviewer recommendation:
+
+Need to discuss with Laura whether:
+
+blueprint should also exist under the new Luma
+
+both Lumas should stay
+
+registry needs duplication
+
+
+Decision:
+
+You will discuss with Laura.
+
+
+---
+
+2. Smart SDK
+
+Reviewer praised this repeatedly.
+
+Using Smart SDK immediately satisfies one of the biggest governance concerns.
+
+
+---
+
+3. boto3 vs Fusion SDK
+
+Reviewer noticed:
+
+Reporting Agent uploads files using boto3.
+
+Question raised:
+
+Why not use Fusion SDK?
+
+No decision made.
+
+Reviewer admitted he doesn't yet know whether Fusion SDK offers additional protection.
+
+Action:
+
+He will investigate and come back with guidance.
+
+No code changes requested.
+
+
+---
+
+4. Security observations
+
+Reviewer briefly mentioned:
+
+Possible violation of:
+
+Rule of Two
+
+Lethal Trifecta
+
+He intentionally avoided asking you to fix anything because he has not yet prepared remediation guidance.
+
+His position:
+
+"I don't like telling people something is broken without telling them how to fix it."
+
+Current status:
+
+No action required.
+
+Will revisit later.
+
+
+---
+
+Agent discussion
+
+Reviewer initially detected:
+
+16 agents.
+
+You clarified:
+
+These are actually:
+
+tools
+
+pipelines
+
+subagents
+
+
+Real architecture:
+
+Approximately
+
+3 major agents
+
+
+Reviewer accepted your explanation.
+
+
+---
+
+Guardrails / Content filtering
+
+Reviewer asked:
+
+How do you prevent:
+
+prompt injection
+
+malicious prompts
+
+offensive content
+
+out-of-scope requests
+
+
+Your explanation:
+
+Everything is controlled inside prompt design.
+
+You have:
+
+in-scope definitions
+
+out-of-scope definitions
+
+regression suite
+
+malicious prompt testing
+
+
+Examples:
+
+harmful prompts
+
+prompt injection
+
+unrelated questions
+
+
+Reviewer accepted this.
+
+Requested:
+
+Regression evidence.
+
+Action:
+
+You'll send regression examples.
+
+
+---
+
+PII masking
+
+Reviewer noticed dedicated masking agent.
+
+You clarified:
+
+It performs:
+
+regex
+
+non-deterministic detection
+
+
+Not only regex matching.
+
+Reviewer accepted.
+
+
+---
+
+Architecture Review Board (ARB)
+
+Reviewer expected an ARB review.
+
+You explained:
+
+AI development process currently does not include this.
+
+Current process is:
+
+AIR
+
+Permit to Build
+
+Permit to Operate
+
+No separate ARB.
+
+Reviewer said he'll verify whether this is truly required.
+
+No immediate action.
+
+
+---
+
+Architecture risk assessment
+
+Reviewer asked:
+
+Has someone formally reviewed:
+
+AI risks
+
+architecture risks
+
+mitigations
+
+
+Current answer:
+
+No formal review identified.
+
+Likely documentation gap.
+
+
+---
+
+Business documentation
+
+Reviewer expects documentation showing:
+
+why application exists
+
+business sponsor
+
+objectives
+
+design review
+
+
+You explained:
+
+Everything currently lives inside AIR.
+
+No Confluence page.
+
+Reviewer recommended:
+
+Create one.
+
+Not because it improves security.
+
+Because auditors need evidence.
+
+
+---
+
+Design reviews
+
+Reviewer wants evidence that:
+
+Someone besides the developers reviewed:
+
+architecture
+
+design
+
+decisions
+
+
+He provided another team's spreadsheet as an example.
+
+Action:
+
+Replicate similar documentation.
+
+
+---
+
+PTX / Permit to Operate
+
+Several governance questions are linked to:
+
+Permit to Initiate
+
+Permit to Build
+
+Permit to Operate
+
+Reviewer believes many governance answers can reference these processes.
+
+
+---
+
+Anti-pattern scan
+
+Reviewer wants another review of:
+
+111 critical findings.
+
+Important context:
+
+Originally:
+
+~2000 findings.
+
+After removing false positives:
+
+111 critical.
+
+Reviewer believes many are outdated because:
+
+scan rules are ~8 months old
+
+MCP work changed many rules
+
+
+Action:
+
+You'll send scan report.
+
+He will independently review.
+
+
+---
+
+Reviewer's overall advice
+
+Do not start fixing security findings yet.
+
+Reason:
+
+Many findings may not matter.
+
+He wants to review first and then recommend only worthwhile changes.
+
+
+---
+
+Decisions made
+
+Continue Tech RCA documentation.
+
+No immediate code changes required.
+
+Create supporting governance documentation.
+
+Share regression evidence.
+
+Investigate blueprint registration strategy with Laura.
+
+Reviewer will investigate boto3 vs Fusion SDK.
+
+Separate security review will happen later.
+
+Anti-pattern report will be reviewed before remediation.
+
+
+
+---
+
+Action items for you
+
+High priority
+
+Discuss Blueprint Registry/Luma strategy with Laura.
+
+Create or update Confluence/business documentation.
+
+Provide regression evidence for guardrails.
+
+Send anti-pattern/security scan report.
+
+Send prompt validation examples.
+
+
+Medium priority
+
+Document business objectives.
+
+Document design reviews.
+
+Document architecture discussions.
+
+Complete remaining Tech RCA spreadsheet questions.
+
+
+
+---
+
+Action items for the reviewer
+
+Send HTML evaluation report.
+
+Send completed spreadsheet example.
+
+Investigate Fusion SDK vs boto3.
+
+Review anti-pattern scan.
+
+Clarify ARB expectations.
+
+Schedule follow-up meeting.
+
+
+
+---
+
+Overall assessment
+
+The meeting was successful. The reviewer expressed confidence in the technical implementation and repeatedly praised your architecture and Smart SDK adoption. The remaining work is largely governance documentation and evidence gathering, rather than redesigning the system or addressing critical technical flaws. The biggest unresolved item is how to handle the Blueprint Registry/Luma registration for the externally registered model, along with collecting the documentation needed to satisfy the Tech RCA process.
+
+
