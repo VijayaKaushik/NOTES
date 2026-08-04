@@ -1,0 +1,215 @@
+Key Decisions
+
+1. Workplace Coach Orchestrator Will Be Treated as a Model
+
+The Workplace Coach orchestrator will go through the formal model-review process because it:
+
+Interacts directly with external corporate client administrators.
+
+Interprets user intent and routes questions to the appropriate agent.
+
+Could create reputational risk through incorrect routing, inappropriate responses, prompt injection, or weak guardrails.
+
+
+Model Risk Governance will evaluate areas such as intent classification, routing accuracy, professional tone, guardrails, and overall orchestrator performance.
+
+2. Underlying Agents Can Be Managed as Analytical Tools
+
+The Navigation, Participant, and Vesting/Release agents are expected to be treated as analytical tools rather than separate models, provided their current design and controls remain in place.
+
+They will still require:
+
+Independent technical review.
+
+Business-owner approval of testing results.
+
+Ongoing performance monitoring.
+
+Monthly testing and review.
+
+Analysis of user feedback, including positive and negative responses.
+
+Security and autonomous-agent controls.
+
+
+The primary distinction is that Model Risk Governance will not independently validate every agent before launch or review every monthly result.
+
+Agent-Level Risk Decisions
+
+Navigation Agent — Low Risk
+
+The Navigation Agent provides procedural and user-guide information, such as:
+
+How to configure a template.
+
+Where to find a screen or function.
+
+Steps for completing an administrative task.
+
+
+The group agreed that this is low risk from an AI perspective because the agent does not execute transactions. An incorrect response may cause inconvenience or lead the user to contact the EPM, but it should not independently create a material financial or regulatory event.
+
+Any risks associated with a user incorrectly setting up information remain part of the existing business process and operational-control framework.
+
+Participant Agent — Low Risk, Subject to Data Readiness
+
+The Participant Agent gives users a faster, conversational way to access data they are already authorized to view.
+
+The group agreed that the AI capability itself is low risk because:
+
+It does not provide new data access.
+
+It does not independently make business decisions.
+
+It acts as an alternative to manual filtering, pivoting, and reporting.
+
+The users are corporate client administrators who already work with this data.
+
+
+However, data completeness and accuracy are material launch dependencies. The AI may make existing data-quality issues more visible or easier to consume.
+
+Required mitigations include:
+
+Clear disclaimers.
+
+Transparency into filters, assumptions, and query interpretation.
+
+User responsibility to validate the output.
+
+A defined data owner and process for correcting issues at the source.
+
+
+The business must determine whether data quality is sufficient for external launch.
+
+Vesting/Release Simulator — Higher Inherent Risk, Mitigated by Human Control
+
+The Vesting/Release capability has higher potential financial, regulatory, operational, and reputational impact because it can:
+
+Calculate information used in a vesting or release process.
+
+Prepare a batch.
+
+Surface tax-related calculations.
+
+Initiate a workflow that may ultimately result in participant transactions.
+
+
+The risk is considered adequately mitigated because the AI does not complete the release independently. The EPM remains the required human control point and is accountable for validating and approving the batch before processing.
+
+Additional requirements:
+
+Clearly label batches and outputs as AI-generated.
+
+State that the output must be validated by the EPM.
+
+Preserve the ability to discard or amend a batch.
+
+Document the EPM control and associated control ID in the risk assessment.
+
+
+A future version in which the agent completes the process and the EPM reviews only exceptions would likely need to be classified and reviewed as a model.
+
+Data and Operational Risk Position
+
+Data quality is not being classified as a new AI risk. It is an existing business and application risk that must be managed through data ownership, source-system controls, and operational governance.
+
+However, data quality is a material dependency for launch. The business must determine:
+
+Who owns the data.
+
+Whether the data is sufficiently complete and accurate.
+
+Which fields should be exposed.
+
+Whether issues are corrected at the golden source.
+
+Whether launching AI on top of the current data would materially increase reputational risk.
+
+
+AI governance will assume that the use-case owner has confirmed the data is fit for purpose.
+
+Security Decision
+
+Because the agents are autonomous and can decide which tools or data sources to use, the solution will undergo an additional security and technology-control review.
+
+The security review will cover:
+
+Tool and data-access boundaries.
+
+Authentication and authorization.
+
+Prompt-injection risks.
+
+External-user threats.
+
+Autonomous tool selection.
+
+Prevention of access outside approved boundaries.
+
+
+The security reviewer is already examining the codebase and will assess the required control questionnaire for each agent.
+
+Deployment Decision
+
+External access will initially be limited to corporate client administrators using Corporate Admin V2.
+
+Although only a small number of external clients may initially have access, internal EPMs will test the solution across a broader client population. This should create a larger and more representative testing and feedback corpus before wider external adoption.
+
+The Vesting/Release capability is already in a production pilot. Since the external version uses the same functionality and the same EPM control, it will likely be handled through change management rather than as a completely new use case. The change will still trigger an updated impact assessment.
+
+Next Steps
+
+1. Complete the full risk assessments for Workplace Coach and all underlying agents as one consolidated exercise.
+
+
+2. Update the Vesting/Release impact assessment to reflect external corporate-client usage.
+
+
+3. Document the agent classifications:
+
+Workplace Coach orchestrator: model.
+
+Navigation Agent: low-risk analytical tool.
+
+Participant Agent: low-risk analytical tool, dependent on data readiness.
+
+Vesting/Release Simulator: higher-risk analytical tool with mandatory EPM validation.
+
+
+
+4. Complete the independent data-science review of the underlying agents and testing methodology.
+
+
+5. Define testing thresholds, expected performance, monitoring requirements, and monthly review procedures.
+
+
+6. Add disclaimers and transparency features, including:
+
+AI-generated content notices.
+
+User-validation responsibilities.
+
+Query filters and assumptions.
+
+EPM-validation language on vesting batches.
+
+
+
+7. Complete the autonomous-agent security assessment and respond to the technology-control questionnaire for each agent.
+
+
+8. Conduct a business data-readiness review covering data ownership, source accuracy, corrective workflows, and launch go/no-go criteria.
+
+
+9. Meet with Reputational Risk to confirm whether external AI interactions require a different reputational-risk standard.
+
+
+10. Hold one consolidated working session with Risk, Legal, Model Risk Governance, Security, Technology Controls, Product, and Business stakeholders rather than reviewing the agents separately.
+
+
+11. Establish a strong feedback loop for the initial external pilot and broader internal EPM testing.
+
+
+12. Return to the governance group with the completed assessments, documented controls, security findings, and data-readiness decision before external launch.
+
+
