@@ -1,0 +1,284 @@
+Refine the Workplace Coach analytics filter section only.
+
+The current implementation still consumes too much vertical space and does not use the screen efficiently.
+
+I want the filter area to be a sleek, compact, professional two-row analytics toolbar.
+
+Do not change any filter logic, API behavior, state management, data binding, or existing functionality.
+
+==================================================
+TARGET RESULT
+==================================================
+
+The entire filter section should occupy approximately 96px to 112px total height on desktop, including both rows and internal padding.
+
+It should feel like a compact enterprise analytics toolbar, not a large form.
+
+Use exactly two rows on desktop.
+
+ROW 1:
+- Start Date
+- End Date
+- Root Agent Temp
+- Root Agent (DB)
+- Coverage
+- Agent Name
+- Sentiment
+
+ROW 2:
+- Feedback Type
+- Traffic
+- User Category
+- Clear filters
+- Refresh
+
+Keep the first row for the primary filters.
+Keep the second row for secondary filters and actions.
+
+Do not allow controls to wrap into a third row on normal desktop widths.
+
+==================================================
+DENSITY
+==================================================
+
+Use compact controls.
+
+Desktop control height:
+- 36px maximum
+
+Input font size:
+- 12px to 13px
+
+Input label font size:
+- 11px to 12px
+
+Toolbar vertical padding:
+- 10px to 12px total per side
+
+Toolbar horizontal padding:
+- 12px to 16px
+
+Gap between controls:
+- 8px to 10px
+
+Gap between rows:
+- 8px
+
+Do not use oversized 44px inputs in this dashboard filter toolbar.
+
+Do not use large floating labels that consume extra height.
+
+==================================================
+LABEL TREATMENT
+==================================================
+
+Use one of these approaches consistently:
+
+Preferred:
+- Use compact InputLabel behavior with labels embedded inside outlined fields
+- Keep labels small
+- Prevent label overlap
+- Use size="small"
+
+Alternative:
+- Use placeholders inside fields and short accessible aria-labels
+- Only use this if it remains clear and accessible
+
+Do not place a separate large label above every field.
+
+==================================================
+FIELD WIDTHS
+==================================================
+
+Use deliberate fixed or constrained widths.
+
+Suggested desktop widths:
+
+Start Date:
+- 130px
+
+End Date:
+- 130px
+
+Root Agent Temp:
+- 150px
+
+Root Agent (DB):
+- 150px
+
+Coverage:
+- 125px
+
+Agent Name:
+- 150px
+
+Sentiment:
+- 125px
+
+Feedback Type:
+- 140px
+
+Traffic:
+- 120px
+
+User Category:
+- 140px
+
+Refresh:
+- compact button, approximately 88px
+
+Clear filters:
+- text button or subtle outlined button
+
+Use minWidth and maxWidth appropriately.
+
+Do not allow fields to stretch unnecessarily across the full page.
+
+==================================================
+LAYOUT
+==================================================
+
+Use a compact two-row layout with MUI Stack or CSS Grid.
+
+Preferred desktop implementation:
+
+- Outer Paper with subtle border
+- One vertical Stack
+- Two horizontal rows
+- Each row uses flex-wrap: nowrap
+- Primary filters in row 1
+- Secondary filters and actions in row 2
+- Actions aligned to the right where space allows
+
+A suitable structure would be:
+
+<Paper>
+  <Stack spacing={1}>
+    <Stack direction="row" spacing={1} alignItems="center" flexWrap="nowrap">
+      primary filters
+    </Stack>
+
+    <Stack direction="row" spacing={1} alignItems="center" flexWrap="nowrap">
+      secondary filters
+      flexible spacer
+      clear filters
+      refresh
+    </Stack>
+  </Stack>
+</Paper>
+
+Use a flexible spacer before the actions in row 2 so Clear filters and Refresh align toward the right.
+
+==================================================
+VISUAL STYLE
+==================================================
+
+The filter container should use:
+
+- white background
+- 1px solid divider border
+- border radius from the theme
+- no heavy shadow
+- subtle visual separation from the page background
+
+Inputs should use:
+
+- white or very subtle neutral background
+- compact outline
+- restrained focus ring
+- consistent border color
+- consistent control height
+
+Avoid:
+- excessive blank space
+- large field padding
+- large labels
+- oversized buttons
+- thick borders
+- each control looking like a separate card
+
+==================================================
+REFRESH ACTION
+==================================================
+
+Refresh must look like an action, not like another dropdown.
+
+Use a compact MUI Button with:
+
+- refresh icon
+- label “Refresh”
+- size="small"
+- height approximately 36px
+- outlined or contained style depending on the existing hierarchy
+
+Do not place Refresh in the middle of dropdown fields.
+
+Place it at the right end of row 2.
+
+Add a compact “Clear filters” text or outlined button immediately before it.
+
+==================================================
+RESPONSIVE BEHAVIOR
+==================================================
+
+Desktop >= 1200px:
+- exactly two rows
+- no horizontal overflow
+- no third row
+
+Tablet 768px to 1199px:
+- allow three logical rows if required
+- preserve compact control height
+- do not stretch controls full width unnecessarily
+
+Mobile < 768px:
+- collapse filters behind a “Filters” button or use a drawer
+- do not show all controls stacked permanently
+- preserve all filter functionality
+
+For this task, prioritize desktop because this is primarily an enterprise desktop analytics application.
+
+==================================================
+KPI PROXIMITY
+==================================================
+
+Reduce the gap between the filter toolbar and the KPI cards.
+
+The KPI row should begin approximately 16px below the filter toolbar.
+
+Do not leave a large empty band between the filter area and the metrics.
+
+==================================================
+IMPORTANT CONSTRAINTS
+==================================================
+
+Do not:
+- change filter names
+- change filter order beyond the specified two rows
+- change dropdown values
+- change date behavior
+- change state handling
+- change API calls
+- change chart logic
+- change KPI calculations
+- redesign the KPI cards yet
+- redesign the chart yet
+- modify unrelated components
+
+Only refine the filter toolbar density, sizing, two-row layout, and spacing.
+
+==================================================
+VALIDATION
+==================================================
+
+After implementation:
+
+1. Confirm the filter section remains exactly two rows at 1440px desktop width.
+2. Confirm all filter controls remain usable.
+3. Confirm there is no horizontal overflow.
+4. Confirm the full toolbar height is approximately 96px to 112px.
+5. Confirm the KPI section begins within approximately 16px below it.
+6. Run lint, type-check, and build.
+7. Summarize the files changed.
+
+Stop after completing this filter-layout refinement.
