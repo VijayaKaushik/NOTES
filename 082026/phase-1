@@ -1,0 +1,510 @@
+You are acting as a senior frontend engineer and enterprise product designer.
+
+I have an existing React + Material UI application called Workplace Coach.
+
+I want to redesign the application incrementally so that it looks like a polished, production-grade enterprise analytics product suitable for senior executives, product owners, operations teams, technology teams, and risk/governance stakeholders.
+
+We are working in phases.
+
+THIS IS PHASE 1 ONLY.
+
+Your objective in Phase 1 is to establish the visual design system and improve the overall page shell/layout.
+
+DO NOT redesign the individual dashboard components yet.
+
+==================================================
+PHASE 1 OBJECTIVE
+==================================================
+
+Improve ONLY:
+
+1. Global MUI theme
+2. Application background
+3. Typography hierarchy
+4. Overall spacing system
+5. Main content container
+6. Page header
+7. Top-level navigation/tab styling
+8. Sidebar visual treatment
+9. Responsive page layout
+10. General Card/Paper/Input/Button styling through the theme
+
+DO NOT change yet:
+
+- API calls
+- Backend integration
+- State management
+- Business logic
+- Data calculations
+- Filter behavior
+- Filter fields
+- Charts
+- Chart data
+- KPI calculations
+- Routing
+- Authentication
+- Existing user interactions
+- Existing data models
+
+The application must remain fully functional after this phase.
+
+==================================================
+DESIGN DIRECTION
+==================================================
+
+The application should feel like a modern enterprise SaaS analytics platform.
+
+Design qualities:
+
+- Professional
+- Calm
+- Trustworthy
+- Executive-friendly
+- Data-focused
+- Minimal
+- Sophisticated
+- Suitable for a regulated financial-services environment
+
+Avoid:
+
+- Flashy gradients
+- Excessive shadows
+- Oversized rounded cards
+- Excessive use of blue
+- Bright/neon colors
+- Decorative animations
+- Glassmorphism
+- Consumer-app styling
+- Excessive borders
+- Dense developer/admin-tool appearance
+
+Think:
+
+Modern enterprise analytics application with the visual discipline of products such as Microsoft Fabric, Stripe Dashboard, Linear, or high-quality institutional financial applications.
+
+Do NOT copy any product exactly.
+
+==================================================
+CREATE A CENTRALIZED MUI THEME
+==================================================
+
+First inspect the existing codebase and determine how Material UI theming is currently implemented.
+
+If a centralized theme already exists, improve it rather than creating competing theme definitions.
+
+If one does not exist, create a clean centralized theme.
+
+Use approximately the following design tokens:
+
+PALETTE
+
+primary.main: #1F5EA8
+primary.dark: #173F73
+
+background.default: #F6F8FB
+background.paper: #FFFFFF
+
+text.primary: #172033
+text.secondary: #667085
+
+divider: #E4E7EC
+
+success.main: #16865C
+error.main: #C9363E
+warning.main: #B7791F
+
+Do not hardcode these colors repeatedly inside individual components if they can come from the theme.
+
+==================================================
+TYPOGRAPHY
+==================================================
+
+Use:
+
+font-family:
+Inter, Roboto, "Helvetica Neue", Arial, sans-serif
+
+If Inter is not already available, DO NOT introduce an unnecessary external dependency just for the font.
+Use the best existing/system font fallback.
+
+Establish a clear hierarchy:
+
+Page title:
+- approximately 26-28px
+- font weight 650-700
+- text.primary
+
+Section heading:
+- approximately 18px
+- font weight 600
+
+Card heading:
+- approximately 14-16px
+- font weight 600
+
+Body:
+- approximately 14px
+- comfortable line height
+
+Secondary/helper text:
+- approximately 12-13px
+- text.secondary
+
+Metric values:
+- approximately 28-32px
+- font weight 700
+
+Avoid excessive font-weight variation.
+
+==================================================
+SPACING
+==================================================
+
+Use an 8px-based spacing system consistently.
+
+Examples:
+
+4px  = very small internal separation
+8px  = compact spacing
+16px = standard component spacing
+24px = card/page section spacing
+32px = major section spacing
+
+Remove arbitrary spacing values where practical.
+
+The page should feel spacious without wasting screen real estate.
+
+==================================================
+SHAPE
+==================================================
+
+Use approximately:
+
+borderRadius: 10px
+
+Cards and surfaces should generally have:
+
+- white background
+- subtle 1px divider-colored border
+- little or no shadow
+
+Avoid floating-card appearance.
+
+Use hierarchy through spacing, typography, borders, and background rather than heavy shadows.
+
+==================================================
+MUI COMPONENT OVERRIDES
+==================================================
+
+Create sensible theme-level overrides where appropriate for:
+
+MuiCard
+MuiPaper
+MuiButton
+MuiTextField
+MuiOutlinedInput
+MuiSelect
+MuiTabs
+MuiTab
+MuiChip
+MuiTooltip
+MuiIconButton
+
+Guidelines:
+
+Buttons:
+- sentence case
+- no forced uppercase
+- approximately 40px height
+- medium font weight
+- sensible horizontal padding
+
+Inputs:
+- approximately 40-44px height where appropriate
+- clean border
+- clear focus state
+- subtle hover state
+
+Cards:
+- border: 1px solid divider
+- subtle/no shadow
+- consistent radius
+
+Tabs:
+- clean typography
+- selected state should be obvious but restrained
+- avoid overly thick indicator
+- reduce visual clutter
+
+Focus states must remain accessible.
+
+==================================================
+PAGE BACKGROUND AND CONTAINER
+==================================================
+
+Change the dashboard background from a mostly white canvas to the subtle application background:
+
+#F6F8FB
+
+Use white Paper/Card surfaces on top of it.
+
+Create a consistent content container.
+
+Desktop:
+
+- max width around 1500-1600px where appropriate
+- centered or appropriately positioned within the application shell
+- approximately 24-32px horizontal padding
+- approximately 24px vertical padding
+
+Tablet:
+
+- approximately 20-24px padding
+
+Mobile:
+
+- approximately 16px padding
+
+Avoid content touching screen edges.
+
+==================================================
+PAGE HEADER
+==================================================
+
+Redesign the top of the Workplace Coach page.
+
+Replace the simple:
+
+"Feedback Workplace Coach"
+
+presentation with a professional page header.
+
+Use:
+
+Breadcrumb / eyebrow:
+Analytics / Workplace Coach
+
+Title:
+Workplace Coach Analytics
+
+Subtitle:
+Monitor adoption, feedback quality, and agent performance.
+
+Layout:
+
+LEFT:
+Breadcrumb
+Title
+Subtitle
+
+RIGHT:
+Reserve space for page-level actions.
+
+For Phase 1, do NOT implement new business functionality.
+
+If Refresh or Export actions already exist and can be safely moved without changing behavior, they may be visually positioned in the header.
+
+Otherwise leave the right-side action area ready for Phase 2.
+
+Keep the header compact.
+
+Do not make it a huge hero section.
+
+==================================================
+TOP TABS
+==================================================
+
+The current page contains navigation such as:
+
+CHAT & FEEDBACK
+ALL CHATS
+AGENTS
+STATS
+USERS
+INTERACTIVE ANALYTICS
+
+Improve the visual presentation of these tabs.
+
+Requirements:
+
+- sentence/title case rather than visually aggressive uppercase if possible
+- consistent spacing
+- subtle selected state
+- clear active indicator
+- accessible keyboard interaction
+- avoid changing routes or tab behavior
+- preserve all existing functionality
+
+The tabs should visually belong to the page header/navigation structure rather than floating independently.
+
+==================================================
+SIDEBAR
+==================================================
+
+Improve the visual styling of the existing sidebar WITHOUT changing its functionality or information architecture in Phase 1.
+
+Requirements:
+
+- cleaner spacing
+- consistent icon sizing
+- improved typography
+- less visual noise
+- subtle section labels
+- clear selected navigation item
+- restrained selected background
+- better vertical rhythm
+
+Do NOT remove menu items yet.
+
+Do NOT change routes.
+
+Do NOT rename business functionality yet.
+
+Do NOT redesign sidebar behavior yet.
+
+Keep the sidebar professional and understated.
+
+If the sidebar currently uses hardcoded styling, move reusable styling into the theme or appropriate shared components where practical.
+
+==================================================
+RESPONSIVE LAYOUT
+==================================================
+
+Ensure the application shell behaves properly at:
+
+Desktop: >= 1200px
+Tablet: 768-1199px
+Mobile: < 768px
+
+For this phase:
+
+- prevent horizontal page overflow
+- make content container responsive
+- make page header responsive
+- allow header actions to wrap appropriately
+- ensure tabs do not destroy the layout
+- do not redesign dashboard cards/charts yet
+
+Do not introduce complicated responsive behavior unnecessarily.
+
+==================================================
+IMPORTANT ENGINEERING CONSTRAINTS
+==================================================
+
+Before making changes:
+
+1. Inspect the existing project structure.
+2. Identify the current MUI ThemeProvider.
+3. Identify shared layout components.
+4. Identify the Workplace Coach dashboard component.
+5. Identify sidebar/navigation components.
+6. Identify whether styling uses:
+   - sx
+   - styled()
+   - CSS modules
+   - plain CSS
+   - theme overrides
+
+Reuse the existing architecture where reasonable.
+
+Do NOT create duplicate themes.
+
+Do NOT rewrite working components unnecessarily.
+
+Do NOT add another UI framework.
+
+Do NOT introduce Tailwind.
+
+Do NOT replace Material UI.
+
+Do NOT change backend contracts.
+
+Do NOT replace working components with mock data.
+
+Do NOT delete existing functionality.
+
+Do NOT perform broad unrelated refactoring.
+
+Prefer small, understandable changes.
+
+==================================================
+CODE QUALITY
+==================================================
+
+Use:
+
+- React best practices
+- TypeScript types where the project already uses TypeScript
+- MUI theme tokens instead of repeated magic values
+- reusable styling
+- semantic HTML where appropriate
+- accessible labels/focus states
+- existing project conventions
+
+Avoid excessive sx duplication.
+
+If the same visual rule appears repeatedly, consider putting it in the theme or a reusable component.
+
+==================================================
+EXECUTION PROCESS
+==================================================
+
+STEP 1:
+
+Before changing code, inspect the relevant files and tell me briefly:
+
+- which files control the MUI theme
+- which files control the application layout
+- which files control the sidebar
+- which files control the Workplace Coach page
+
+STEP 2:
+
+Give me a short implementation plan.
+
+STEP 3:
+
+Implement Phase 1.
+
+STEP 4:
+
+Run the existing lint/build/type-check commands available in the project.
+
+Fix any issues introduced by your changes.
+
+Do not fix unrelated pre-existing issues unless required for the build.
+
+STEP 5:
+
+Summarize:
+
+- files modified
+- theme changes
+- layout changes
+- responsive changes
+- any assumptions made
+
+==================================================
+DEFINITION OF DONE
+==================================================
+
+Phase 1 is complete when:
+
+- The application immediately feels cleaner and more professional
+- Typography has a clear hierarchy
+- Background and surfaces have clear separation
+- Spacing is consistent
+- Sidebar looks cleaner
+- Tabs look professional
+- Page header has strong hierarchy
+- Content has consistent margins/padding
+- Existing dashboard functionality still works
+- Existing filters still work
+- Existing charts still work
+- Existing navigation still works
+- No API behavior has changed
+- Application builds successfully
+
+STOP after Phase 1.
+
+Do NOT proceed to redesign filters, KPI cards, charts, analytics panels, or data visualization until I explicitly ask for Phase 2.
