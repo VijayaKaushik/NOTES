@@ -1,0 +1,446 @@
+You are acting as a senior React/MUI engineer and solution architect.
+
+I am sharing an HTML mockup for a new “Tester Validation” view in the Workplace Coach application.
+
+IMPORTANT:
+Do not start implementing the UI immediately.
+
+Your first task is to inspect the existing application and determine whether the data required by the mockup already exists, where it exists, and what gaps remain.
+
+The objective is to map every visual element in the HTML mockup to:
+1. Existing frontend state/data
+2. Existing API response fields
+3. Existing backend endpoints
+4. Existing database fields, if visible from the codebase
+5. Any derived calculations required
+6. Any missing data that would require backend changes
+
+==================================================
+STEP 1 — INSPECT THE HTML MOCKUP
+==================================================
+
+Read the shared HTML mockup and identify every data point required by the page.
+
+At minimum, inspect these areas:
+
+TESTER HEADER
+- Tester name
+- Tester identifier
+- User role / user category
+- Region or country
+- Last activity timestamp
+- Tester active/inactive status
+
+TOP FILTERS
+- Tester selector
+- Date range
+- Agent/scope selector
+
+KPI CARDS
+- Questions tested
+- Number of test sessions
+- Agent coverage
+- Feedback coverage
+- Positive feedback rate
+- Issues found
+- Resolved issues
+- Unresolved issues
+
+AGENT COVERAGE
+For each agent:
+- Agent name
+- Number of questions tested
+- Percentage or volume distribution
+- Number of responses with feedback
+- Feedback coverage %
+- Whether the tester has tested that agent
+
+Examples may include:
+- Navigation
+- Participant
+- Release
+- Reporting
+
+FEEDBACK SUMMARY
+- Positive feedback count
+- Negative feedback count
+- Needs-review count, if such a concept exists
+- No-feedback count
+
+TESTER ACTIVITY
+- Date/time
+- Number of questions by day
+- Optional session count by day
+
+NEEDS ATTENTION
+- Negative or failed questions
+- Issue status
+- Issue category
+- Resolved/unresolved status
+- Link/identifier to the original question/chat
+
+RECENT TESTING TABLE
+- Date/time
+- Question/prompt
+- Agent
+- Result/status
+- Feedback
+- Regression status
+- Question/chat/session identifier
+- Ability to open the detailed record
+
+QUESTION DETAIL VIEW, IF SUPPORTED
+- Full user question
+- Full response
+- Tester
+- Agent
+- Timestamp
+- Sentiment
+- Feedback text
+- Feedback type
+- Routed agents
+- Tools used
+- Session ID
+- Response latency, if available
+- Regression inclusion/status/result, if available
+
+==================================================
+STEP 2 — INSPECT THE EXISTING CODEBASE
+==================================================
+
+Before proposing changes, inspect the existing Workplace Coach implementation.
+
+Identify:
+
+- React page/component for Workplace Coach
+- Stats page/component
+- Chat & Feedback page/component
+- Users page/component
+- Existing filter components
+- Existing API client/service layer
+- Existing interfaces/types
+- Existing backend routes, if this repository contains them
+- Existing database/query layer, if visible
+- Existing regression-related fields
+- Existing feedback-related fields
+- Existing user/tester-related fields
+
+Search the codebase for terms such as:
+
+user
+user_id
+tester
+session
+session_id
+prompt
+question
+response
+feedback
+feedback_type
+sentiment
+agent
+agent_name
+root_agent
+tools
+traffic
+user_category
+coverage
+regression
+regression_status
+timestamp
+created_at
+
+Do not assume that the display names in the mockup match the backend field names.
+
+==================================================
+STEP 3 — BUILD A DATA MAPPING TABLE
+==================================================
+
+Create a detailed mapping table before writing code.
+
+Use columns like:
+
+| UI Element | Metric / Field | Existing Source | Existing Field(s) | Calculation Needed | Availability | Gap / Action |
+|------------|----------------|-----------------|-------------------|--------------------|--------------|--------------|
+
+For Availability use one of:
+
+- AVAILABLE
+- DERIVABLE
+- PARTIALLY AVAILABLE
+- NOT FOUND
+
+Example:
+
+| Questions Tested | Total tester questions in selected period | chat API | user_id, created_at | COUNT(*) filtered by tester/date | DERIVABLE | Frontend or backend aggregation |
+| Feedback Coverage | % tester questions with submitted feedback | feedback API | question_id, feedback | feedback_count / total_questions * 100 | DERIVABLE | Need correct denominator |
+| Agent Coverage | Number of required agents tested | chat records | agent_name | COUNT DISTINCT agent_name | DERIVABLE | Need definition of required agents |
+
+Do this for EVERY data point in the HTML mockup.
+
+==================================================
+STEP 4 — VALIDATE METRIC DEFINITIONS
+==================================================
+
+Do not invent business definitions.
+
+Flag any metric whose definition is ambiguous.
+
+Specifically analyze:
+
+1. “Questions Tested”
+
+Determine whether this should mean:
+- all chats/questions submitted by the tester
+or
+- only questions explicitly submitted as validation/test questions
+or
+- only questions for which feedback was submitted
+
+Do not choose without evidence.
+
+2. “Agent Coverage”
+
+Determine whether this means:
+- distinct agents used / all available agents
+or
+- distinct required validation agents used / required agents
+or
+- some predefined validation threshold
+
+3. “Feedback Coverage”
+
+Preferred formula if supported:
+
+questions with feedback / total questions tested
+
+But validate this against the existing data model.
+
+4. “Positive Feedback Rate”
+
+Preferred formula:
+
+positive feedback / total submitted feedback
+
+Do NOT calculate:
+
+positive feedback / total questions
+
+unless that is the existing business definition.
+
+5. “Issues Found”
+
+Determine whether a negative feedback record automatically constitutes an issue.
+
+Check whether the application already has:
+- issue_status
+- resolution_status
+- review_status
+- ticket/reference
+- feedback category
+
+If not, flag this metric as NOT FOUND rather than inventing it.
+
+6. “Needs Review”
+
+Check whether this is a real existing status.
+If it does not exist, clearly state that.
+
+7. “Regression Status”
+
+Determine whether chat/question records are currently linked to the regression dataset/results.
+
+Identify:
+- regression question ID
+- included/not included
+- pass/fail
+- last run
+- regression version
+
+If the link does not exist, flag the gap.
+
+==================================================
+STEP 5 — DETERMINE THE TESTER IDENTIFIER
+==================================================
+
+This is critical.
+
+Find out how a tester/user is uniquely identified in the current application.
+
+Examples might include:
+
+- user_id
+- employee ID
+- email
+- login ID
+- username
+- session identity
+
+Determine:
+
+- What field uniquely identifies the person?
+- Is the person's display name available?
+- Can multiple sessions be joined reliably to the same user?
+- Is user category available?
+- Is region available?
+- Can we query activity across a date range?
+
+Do not expose sensitive fields unnecessarily in the UI.
+
+==================================================
+STEP 6 — DETERMINE WHAT CAN BE BUILT WITH CURRENT DATA
+==================================================
+
+Classify the mockup into three groups:
+
+A. CAN BUILD NOW
+Data already exists directly.
+
+B. CAN BUILD WITH DERIVED METRICS
+No backend change required, but aggregation/calculation is necessary.
+
+C. REQUIRES DATA/BACKEND CHANGE
+The required data does not currently exist or cannot reliably be derived.
+
+Give me these three lists explicitly.
+
+==================================================
+STEP 7 — RECOMMEND THE API DESIGN
+==================================================
+
+Only after completing the mapping, recommend whether the existing APIs are sufficient.
+
+Prefer reusing existing endpoints if they can support the view efficiently.
+
+However, if rendering the tester page would require many frontend calls and large raw datasets, recommend a dedicated aggregation endpoint such as:
+
+GET /analytics/testers/{testerId}
+
+with query parameters:
+
+startDate
+endDate
+agent
+
+Potential response structure:
+
+{
+  "tester": {
+    "id": "...",
+    "name": "...",
+    "userCategory": "...",
+    "region": "...",
+    "lastActivity": "..."
+  },
+
+  "summary": {
+    "questionsTested": 0,
+    "sessions": 0,
+    "agentsTested": 0,
+    "totalRequiredAgents": 0,
+    "feedbackCoverage": 0,
+    "positiveFeedbackRate": 0
+  },
+
+  "agentCoverage": [],
+
+  "feedbackSummary": {},
+
+  "activity": [],
+
+  "recentTests": []
+}
+
+This is only an example.
+
+Do not implement this contract unless it aligns with the existing architecture.
+
+==================================================
+STEP 8 — PERFORMANCE REVIEW
+==================================================
+
+Assess whether the existing Stats/Chat APIs return too much raw data for this view.
+
+Specifically check for:
+- frontend-side aggregation over thousands of chat records
+- duplicate API requests
+- fetching entire responses when only metrics are needed
+- large payloads
+- pagination
+- server-side filtering by tester/date
+- server-side aggregation capability
+
+Recommend backend aggregation if it materially improves performance.
+
+==================================================
+STEP 9 — PRIVACY / ACCESS CONTROL
+==================================================
+
+Because this is a tester-level view, inspect existing authorization patterns.
+
+Determine whether a user should be allowed to view:
+- all testers
+- only their own activity
+- testers within their business/team
+- only administrators
+
+Do not weaken any existing authorization.
+
+Do not expose user identifiers, prompts, or responses to users who are not already authorized to see them.
+
+==================================================
+STEP 10 — OUTPUT BEFORE IMPLEMENTATION
+==================================================
+
+Before modifying any code, give me:
+
+1. Existing architecture summary
+
+2. Complete data mapping table
+
+3. Metrics that are directly available
+
+4. Metrics that can be derived
+
+5. Metrics/data that are missing
+
+6. Ambiguous metric definitions requiring product confirmation
+
+7. Recommended API strategy
+
+8. Recommended frontend component structure
+
+9. Files that would likely need modification
+
+10. Proposed implementation sequence
+
+==================================================
+IMPORTANT CONSTRAINTS
+==================================================
+
+DO NOT:
+
+- start coding the HTML mockup immediately
+- create mock APIs
+- hardcode sample tester data
+- fabricate missing fields
+- assume negative feedback equals an issue
+- assume all users are testers
+- change existing APIs without explaining why
+- change existing business logic
+- install new libraries
+- rewrite unrelated code
+- expose sensitive user information
+- break the existing Stats or Chat & Feedback pages
+
+The HTML is a DESIGN REFERENCE, not a source of truth for the data model.
+
+The existing application and backend are the source of truth.
+
+==================================================
+FINAL INSTRUCTION
+==================================================
+
+STOP after completing the discovery, mapping, gap analysis, and implementation proposal.
+
+Do not implement the Tester Validation page until I review and approve the data mapping.
