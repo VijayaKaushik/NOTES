@@ -1,0 +1,335 @@
+I want to pause the application/DataFrame changes for now.
+
+First, help me create a SQL query that produces a normalized extract that I can run for a specific date range, export, and load into Tableau.
+
+CRITICAL:
+Do not use the column names in this prompt literally.
+
+The names I mention below such as message ID, user ID, client, feedback, agent, timestamp, etc. are BUSINESS CONCEPTS only.
+
+You MUST inspect the existing database schema, SQL queries, repository/model code, and current extraction logic and use the ACTUAL database table names and ACTUAL database column names.
+
+Do not invent columns.
+
+If a business concept is unavailable in the source data, tell me explicitly.
+
+--------------------------------------------------
+OBJECTIVE
+--------------------------------------------------
+
+I need a SQL result at this granularity:
+
+ONE ROW PER:
+distinct chat message + distinct logical/business agent
+
+A single chat message can invoke multiple agents.
+
+For example, conceptually:
+
+Message 123 invokes:
+- WP-Coach
+- Participant
+
+The normalized SQL output must contain:
+
+123 | WP-Coach
+123 | Participant
+
+If the same logical agent appears multiple times in the execution trace for the same message, it should appear only once.
+
+Example:
+
+Raw calls:
+WP-Coach
+Participant Router
+Participant Agent
+Participant Agent
+
+If the existing mapping says both Participant Router and Participant Agent belong to Participant, normalized output should be:
+
+123 | WP-Coach
+123 | Participant
+
+NOT:
+
+123 | WP-Coach
+123 | Participant
+123 | Participant
+123 | Participant
+
+--------------------------------------------------
+STEP 1 — INSPECT THE EXISTING IMPLEMENTATION
+--------------------------------------------------
+
+Before writing the query, identify:
+
+1. The actual table(s) containing Chat & Feedback data.
+2. The actual primary/message identifier.
+3. The actual conversation/session identifier if available.
+4. The actual timestamp column.
+5. The actual user identifier.
+6. The actual client identifier and/or client name.
+7. The actual feedback sentiment field.
+8. The actual feedback text field.
+9. The actual database field currently used for Root Agent.
+10. The actual source of the "Agents" information shown in the application.
+11. The datatype of that agent information:
+    - JSON
+    - JSON array
+    - string
+    - delimited string
+    - child table
+    - event table
+    - execution trace
+    - other
+12. Where the existing technical-agent-to-business-agent mapping is stored.
+
+Show me these findings before generating the final SQL.
+
+--------------------------------------------------
+STEP 2 — UNDERSTAND AGENT MAPPING
+--------------------------------------------------
+
+Do not assume the DB Root Agent field is sufficient.
+
+The message-level Agents information is the source we need to analyze.
+
+One message can legitimately invoke multiple logical agents.
+
+Use the EXISTING mapping from the codebase to determine how technical agent calls map to logical/business agents.
+
+Do not create a new mapping unless no existing mapping exists.
+
+Show me the mapping you find.
+
+Also identify whether the mapping is:
+
+- stored in a table
+- stored in Python/Java/etc.
+- configuration
+- dictionary/map
+- hard-coded application logic
+- something else
+
+If the mapping is not available directly in SQL, tell me how you recommend representing it temporarily in this exploratory query, for example with a CASE expression or CTE.
+
+Do not implement that until you show me what currently exists.
+
+--------------------------------------------------
+STEP 3 — CREATE NORMALIZED SQL
+--------------------------------------------------
+
+Create a SQL query that returns one row per:
+
+SOURCE MESSAGE + DISTINCT LOGICAL AGENT
+
+The output should preserve the useful dimensions needed for Tableau.
+
+Use the ACTUAL database column names, but conceptually I need:
+
+- message identifier
+- conversation/session identifier, if available
+- message timestamp
+- user identifier
+- client identifier
+- client name, if available
+- logical/business agent
+- raw technical agent information if useful for validation
+- root agent DB field for comparison/lineage
+- feedback sentiment
+- feedback text
+- prompt/question if appropriate
+- response if appropriate
+
+Do not rename existing source columns unnecessarily.
+
+A derived logical agent column is expected.
+
+--------------------------------------------------
+STEP 4 — DATE RANGE
+--------------------------------------------------
+
+The query must support a date range so I can extract a controlled dataset for Tableau.
+
+Use parameters/placeholders appropriate for the database technology.
+
+Conceptually:
+
+start_date
+end_date
+
+Use the ACTUAL message timestamp column.
+
+Prefer a date condition that avoids end-of-day problems, conceptually:
+
+timestamp >= start_date
+AND timestamp < end_date + 1 day
+
+Use the syntax appropriate for the actual database.
+
+--------------------------------------------------
+STEP 5 — IMPORTANT GRANULARITY RULE
+--------------------------------------------------
+
+The final SQL result is intentionally NOT one row per chat message.
+
+It is:
+
+MESSAGE × DISTINCT LOGICAL AGENT
+
+Therefore:
+
+If a message invokes one logical agent:
+1 output row
+
+If a message invokes two logical agents:
+2 output rows
+
+If a message invokes three logical agents:
+3 output rows
+
+However, repeated calls to the SAME logical agent within a message must not create duplicate rows.
+
+--------------------------------------------------
+STEP 6 — DO NOT LOSE MESSAGE-LEVEL IDENTIFIERS
+--------------------------------------------------
+
+It is critical that the normalized extract retains the unique message identifier.
+
+I will need Tableau to calculate:
+
+COUNTD(message identifier)
+
+rather than COUNT(rows).
+
+This is necessary because the same message can appear once for WP-Coach and once for Participant.
+
+Example:
+
+message | agent
+1001    | WP-Coach
+1001    | Participant
+1002    | WP-Coach
+
+Total normalized rows = 3
+
+But distinct messages = 2.
+
+Make sure the resulting SQL supports this distinction.
+
+--------------------------------------------------
+STEP 7 — TABLEAU QUESTIONS THE EXTRACT MUST SUPPORT
+--------------------------------------------------
+
+The SQL extract should allow me to answer these questions in Tableau without additional backend transformations:
+
+AGENT LEVEL
+
+1. Number of distinct chat messages per agent.
+
+2. Number of distinct chat messages per agent broken down by feedback sentiment.
+
+3. Number of distinct users per agent.
+
+4. Number of distinct clients per agent.
+
+USER LEVEL
+
+5. Number of distinct messages for each user by agent.
+
+6. Number of distinct messages for each user by agent and feedback sentiment.
+
+CLIENT LEVEL
+
+7. Number of distinct messages for each client by agent.
+
+8. Number of distinct users within each client by agent, if user/client relationship is available.
+
+9. Number of distinct clients using each agent.
+
+--------------------------------------------------
+STEP 8 — FEEDBACK SEMANTICS
+--------------------------------------------------
+
+Do not convert missing feedback into Neutral or Positive.
+
+Preserve the actual feedback value.
+
+If feedback is null/no feedback, retain it as null or label it explicitly only if the existing application already has a convention for doing so.
+
+I need to distinguish:
+
+- positive feedback
+- negative feedback
+- other actual sentiment values
+- no feedback
+
+--------------------------------------------------
+STEP 9 — VALIDATION QUERY
+--------------------------------------------------
+
+In addition to the normalized extract, give me validation SQL so I can understand the resulting granularity.
+
+For the same date range, show:
+
+1. Total distinct source messages.
+
+2. Total rows in the normalized output.
+
+3. Total distinct messages in the normalized output.
+
+4. Number of messages associated with exactly 1 logical agent.
+
+5. Number of messages associated with 2 logical agents.
+
+6. Number of messages associated with 3+ logical agents.
+
+7. Distribution such as:
+
+agent_count_per_message | number_of_messages
+1                       | ...
+2                       | ...
+3                       | ...
+4                       | ...
+
+8. Distinct logical agents found.
+
+9. Count of messages per logical agent.
+
+10. Any technical agent values that cannot be mapped.
+
+11. Number of messages containing an unmapped technical agent.
+
+12. Compare Root Agent DB against normalized agent attribution so we can see how much information Root Agent DB currently misses.
+
+--------------------------------------------------
+STEP 10 — SHOW ME THE QUERY IN STAGES
+--------------------------------------------------
+
+Do not give me one giant SQL query immediately.
+
+First explain the proposed CTE/query structure.
+
+For example, depending on the actual schema, it may conceptually look like:
+
+base_messages
+    ↓
+extract_agent_calls
+    ↓
+map_technical_agents
+    ↓
+deduplicate_message_agent
+    ↓
+final_normalized_extract
+
+Use whatever structure is appropriate for the actual database.
+
+Then provide:
+
+A. Normalized extraction query
+B. Validation/granularity query
+C. Unmapped-agent diagnostic query
+
+Do not change application code yet.
+
+The immediate goal is only to generate a trustworthy SQL extract that I can run for a selected date range and load into Tableau.
