@@ -1,0 +1,306 @@
+CRITICAL — USE THE EXISTING DATABASE SCHEMA
+
+The column names mentioned in this prompt such as `message_id`, `conversation_id`,
+`user_id`, `client_id`, `feedback_sentiment`, `agents`, etc. are CONCEPTUAL
+examples only.
+
+DO NOT assume these are the actual database or DataFrame column names.
+
+Before writing any transformation or analytics code:
+
+1. Inspect the existing database query/model/repository and identify the actual
+   source column names.
+
+2. Inspect the DataFrame produced by the existing extraction code and identify
+   its actual column names.
+
+3. Create a mapping between the business concepts in this requirement and the
+   actual fields in the application.
+
+For example, report something like:
+
+Business concept        Actual DB column       Extracted DF column
+----------------        ----------------       -------------------
+Message identifier      <actual column>        <actual column>
+Conversation identifier <actual column>        <actual column>
+User identifier         <actual column>        <actual column>
+Client                   <actual column>        <actual column>
+Agent trace              <actual column>        <actual column>
+Feedback sentiment       <actual column>        <actual column>
+Feedback text            <actual column>        <actual column>
+Timestamp                <actual column>        <actual column>
+
+Do NOT create new source-column assumptions simply because a name appears in
+this prompt.
+
+If a requested business concept does not exist in the current database/query,
+explicitly tell me that it is unavailable instead of inventing a field.
+
+When implementing the normalized DataFrame, use the ACTUAL column names from
+the existing implementation.
+
+Only introduce a new column where this requirement explicitly requires derived
+data — specifically the normalized logical/business agent attribution.
+
+Also preserve existing naming conventions used by this codebase.
+
+Before coding, show me:
+- actual database columns involved
+- current SELECT/query
+- resulting DataFrame columns
+- which existing column contains the agent-call information
+- existing agent mapping and where it is defined
+- proposed derived column(s)
+
+I want to introduce a normalized analytics DataFrame in the backend for Chat & Feedback.
+
+CONTEXT
+
+The existing database `root_agent_db` field does not represent all agents involved in a message.
+
+A single chat message can invoke multiple agents.
+
+Example:
+
+message_id = 123
+
+agents =
+[
+  "full_capabilities_router",
+  "participant_agent"
+]
+
+Using the existing technical-agent-to-business-agent mapping, this message should be represented as:
+
+message_id | agent
+123        | WP-Coach
+123        | Participant
+
+For now, the dataset is small, so DO NOT create a database view or change the persistence model.
+
+Instead, create a normalized pandas DataFrame during backend data extraction/transformation.
+
+Later we should be able to replace this DataFrame transformation with a database view without changing the analytics logic.
+
+--------------------------------------------------
+STEP 1 — FIND THE CURRENT DATA FLOW
+--------------------------------------------------
+
+Inspect the codebase and identify:
+
+1. Where Chat & Feedback data is extracted.
+2. Where the `agents` field comes from.
+3. What datatype/format `agents` has.
+4. Where the existing agent mapping is maintained.
+5. Where dashboard aggregation currently happens.
+
+Before modifying code, explain the current flow.
+
+--------------------------------------------------
+STEP 2 — CREATE NORMALIZED DATAFRAME
+--------------------------------------------------
+
+Create a reusable transformation function, conceptually:
+
+build_normalized_chat_agent_df(source_df)
+
+The resulting DataFrame should contain ONE ROW PER:
+
+message + distinct logical/business agent
+
+Do not create one row per technical agent call.
+
+Example:
+
+Raw agents:
+
+full_capabilities_router
+participant_router
+participant_agent
+participant_agent
+
+Existing mapping:
+
+full_capabilities_router -> WP-Coach
+participant_router       -> Participant
+participant_agent        -> Participant
+
+Normalized result:
+
+message_id | agent
+123        | WP-Coach
+123        | Participant
+
+Participant appears only once for this message.
+
+--------------------------------------------------
+PRESERVE MESSAGE ATTRIBUTES
+--------------------------------------------------
+
+Each normalized row should retain the message-level dimensions needed for analytics, such as:
+
+message_id
+conversation_id
+timestamp
+user_id
+client_id
+client_name
+agent
+feedback_sentiment
+feedback_text
+
+Retain other existing fields if needed for the current dashboard.
+
+Do not overwrite `root_agent_db`.
+
+Keep it available for lineage/debugging, but do not use it as the analytical source of agent attribution.
+
+--------------------------------------------------
+AGENT MAPPING RULES
+--------------------------------------------------
+
+Use the existing mapping in the codebase.
+
+Do not hard-code a new mapping unless one does not exist.
+
+Processing should conceptually be:
+
+raw agent calls
+    ↓
+technical agent names
+    ↓
+business/logical agent mapping
+    ↓
+remove duplicate logical agents within message
+    ↓
+explode into normalized rows
+
+A message may therefore produce:
+
+1 row
+2 rows
+3 rows
+etc.
+
+depending on how many distinct logical agents participated.
+
+--------------------------------------------------
+UNMAPPED AGENTS
+--------------------------------------------------
+
+Do not silently discard unmapped technical agents.
+
+Capture enough information so we can identify:
+
+- unmapped agent name
+- message associated with it
+
+Provide a validation output showing all unmapped agent names.
+
+--------------------------------------------------
+STEP 3 — ANALYTICS SHOULD USE NORMALIZED DATAFRAME
+--------------------------------------------------
+
+All new agent analytics should use the normalized DataFrame.
+
+1. Messages per agent
+
+group by:
+agent
+
+metric:
+COUNT DISTINCT message_id
+
+
+2. Messages per agent by feedback sentiment
+
+group by:
+agent
+feedback_sentiment
+
+metric:
+COUNT DISTINCT message_id
+
+
+3. User-level agent usage
+
+group by:
+user_id
+agent
+
+metric:
+COUNT DISTINCT message_id
+
+
+4. User-level feedback by agent
+
+group by:
+user_id
+agent
+feedback_sentiment
+
+metric:
+COUNT DISTINCT message_id
+
+
+5. Client-level usage by agent
+
+group by:
+client_id
+agent
+
+metric:
+COUNT DISTINCT message_id
+
+
+6. Number of clients per agent
+
+group by:
+agent
+
+metric:
+COUNT DISTINCT client_id
+
+--------------------------------------------------
+IMPORTANT COUNTING RULE
+--------------------------------------------------
+
+Because one message can appear multiple times in the normalized DataFrame, analytics must use DISTINCT message_id when calculating message counts.
+
+Do not blindly use DataFrame row count as chat count.
+
+--------------------------------------------------
+VALIDATION
+--------------------------------------------------
+
+After creating the normalized DataFrame, print or log:
+
+Total source messages
+Normalized dataframe rows
+Messages with one agent
+Messages with multiple agents
+Distinct logical agents
+Unmapped technical agents
+Messages containing unmapped agents
+
+Also confirm that no source messages were accidentally lost.
+
+--------------------------------------------------
+DESIGN GOAL
+--------------------------------------------------
+
+Keep the normalization logic isolated from the dashboard/UI.
+
+The dashboard should simply consume an already normalized dataset.
+
+Later I want to replace:
+
+source data -> pandas normalization
+
+with:
+
+database normalized view
+
+without having to rewrite the analytics layer.
+
+First inspect the existing implementation and propose the exact code changes before making them.
