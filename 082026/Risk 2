@@ -1,0 +1,41 @@
+Hi L
+
+Thank you. We will clarify both the performance metrics/thresholds and the remediation process in the monitoring section.
+
+For the pilot phase, we are proposing the following monitoring and remediation approach:
+
+1. Routing Performance
+
+Agent routing for live pilot conversations will be validated through human review. The reviewer will assess the user's question, identify the agent(s) that should have been invoked, and compare this against the actual agent calls captured by the system.
+
+The primary metric will be Routing Accuracy, supplemented by analysis of missed and unnecessary agent calls.
+
+If routing performance falls below the agreed threshold, we will analyze the failed interactions to identify the failure pattern and root cause. Remediation may include changes to routing instructions/prompts or agent definitions. The impacted scenarios will then be retested before the change is promoted.
+
+2. Out-of-Scope / Harmful Content Handling
+
+All live pilot questions will be evaluated through an independent LLM evaluator to assess whether the question is in scope, out of scope, or contains harmful/inappropriate content. The evaluator's assessment will be compared with how the application actually handled the request.
+
+The monitoring will therefore identify both:
+
+- Requests that should have been restricted but were incorrectly answered; and
+- Legitimate requests that were incorrectly restricted.
+
+Potential exceptions identified by the LLM evaluator will be treated as monitoring signals and reviewed by a human where required.
+
+If performance falls below the agreed threshold, the failed interactions will be analyzed and the relevant guardrail/classification logic or prompts will be remediated. The affected scenarios will be retested before the change is released.
+
+3. Pilot Remediation Process
+
+For any metric that breaches its defined threshold, we will follow a common remediation process:
+
+Threshold breach → Exception identification → Human/root-cause review → Corrective change → Regression testing → Release
+
+Critical safety/control failures will be reviewed immediately and may result in the impacted capability being restricted while remediation is completed.
+
+We will also retain confirmed failure scenarios as regression cases so that subsequent changes can be tested against previously identified issues.
+
+We will document the specific performance metrics, thresholds, monitoring frequency, and remediation/escalation criteria in the application monitoring plan.
+
+Best,
+Vijaya
