@@ -1,0 +1,35 @@
+During the pilot phase, performance monitoring will be performed on live chat interactions using a combination of human review and automated LLM-based evaluation.
+
+1. Agent Routing Monitoring – Human Review
+
+Routing performance will be assessed through human review of live pilot conversations.
+
+For each reviewed interaction, the reviewer will evaluate the user's question and determine whether the orchestrator invoked the appropriate agent or combination of agents. The expected routing determined by the reviewer will then be compared with the actual agent calls captured by the system.
+
+This will allow us to monitor:
+
+- Correct agent selection
+- Missed required agent calls
+- Unnecessary agent calls
+- Correct handling of multi-agent requests
+
+Routing exceptions identified through this process will be analyzed to identify recurring failure patterns and opportunities for improvement.
+
+2. Out-of-Scope and Harmful Content – Automated Evaluation
+
+All live pilot questions will be independently scanned through an LLM-based evaluator for defined behavioral categories, including out-of-scope and harmful/inappropriate requests.
+
+The evaluator will assess the incoming question and determine the expected handling category. This classification will then be compared with the application's actual handling of the request to identify potential mismatches.
+
+For example, the monitoring will identify cases where:
+
+- An out-of-scope question was incorrectly answered.
+- A valid in-scope question was incorrectly rejected as out of scope.
+- Harmful or inappropriate content was not handled according to the defined behavior.
+- A legitimate request was incorrectly classified as harmful.
+
+3. Exception Management
+
+Interactions identified as potential failures by either human review or automated evaluation will be captured as exceptions for further analysis. LLM-evaluator results will be treated as a monitoring signal rather than absolute ground truth, with material or ambiguous exceptions subject to human review.
+
+This approach provides human oversight for domain-specific routing quality while enabling systematic monitoring of all live pilot interactions for scope and harmful-content handling.
