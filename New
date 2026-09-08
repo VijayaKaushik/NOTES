@@ -1,0 +1,191 @@
+Yes. You can speak credibly on both panels while keeping the discussion at the level of industry patterns, architecture principles, governance, and lessons learned—without mentioning internal systems, vendors, clients, volumes, controls, incidents, or implementation details.
+
+From the invitation, the two topics are:
+
+Panel 1 — Securing the Agentic Enterprise: From Boardroom Mandate to Runtime Defense
+Panel 2 — Enterprise AI in Action: Balancing Innovation, Governance & Security
+
+Given your experience building enterprise AI/agentic solutions, Panel 2 is probably the more natural fit, while Panel 1 is also very workable if you stay focused on architectural principles rather than cybersecurity implementation.
+
+Panel 1: Securing the Agentic Enterprise
+
+Your central message could be:
+
+> “Agentic AI changes the security model because we're moving from systems that generate information to systems that can reason, select tools, access data and potentially take actions.”
+
+
+
+From there, you have several strong discussion areas.
+
+1. Security has to start with the agent's authority, not just the model. A useful way to explain this is that the model is only one component. The real risk comes from what the overall agent is allowed to see, decide and do. An enterprise should explicitly define the agent's identity, data access, available tools/APIs, permitted actions and escalation boundaries.
+
+You can give a generic example: an HR assistant may be allowed to explain a policy, but changing an employee record is a completely different level of authority.
+
+2. Authentication is not authorization. A user being authenticated does not mean an agent should automatically inherit unlimited access. A strong enterprise pattern is:
+
+User → Agent → Tool/API → Authorization → Enterprise system
+
+Authorization should continue to be enforced by the underlying systems rather than relying on an LLM prompt saying, "Don't access things this user shouldn't see."
+
+That's a very strong technical point for this panel.
+
+3. Treat tools as a security boundary. As enterprises move toward MCP, tool calling and multi-agent architectures, the tool layer becomes extremely important. You can discuss principles such as least privilege, scoped credentials, allow-listed tools, schema validation, auditability and policy enforcement.
+
+A good panel line:
+
+> “I don't want the model to be my security control. Security controls should remain deterministic wherever possible.”
+
+
+
+4. Agent-to-agent communication creates a new trust problem. In a multi-agent architecture, don't automatically assume that because one trusted agent called another agent, everything should be trusted. Identity, authorization, input validation and context boundaries still matter.
+
+You can introduce the concept of:
+
+User trust → Orchestrator trust → Agent trust → Tool trust → Data trust
+
+Each boundary should be deliberate.
+
+5. Runtime defense requires observability. Once an agent is running, enterprises need visibility into things like which agent was invoked, which tools were called, what data classes were accessed, whether a request was blocked/escalated and whether behavior deviated from expected patterns.
+
+Importantly, you can discuss the categories of telemetry without revealing what your organization actually logs.
+
+6. Human-in-the-loop should be risk-based. Not every AI interaction requires human approval. A useful framework is to divide actions conceptually into:
+
+Read → Recommend → Prepare → Execute
+
+As autonomy increases, controls should increase.
+
+That gives you a sophisticated answer if someone asks, “How much autonomy should enterprises actually give agents?”
+
+
+---
+
+Panel 2: Enterprise AI in Action
+
+I think you could be particularly strong here because you can combine product, engineering and governance.
+
+Your central message could be:
+
+> “The challenge isn't choosing between innovation and governance. The challenge is designing governance into the architecture so that innovation can scale safely.”
+
+
+
+Then build around six ideas.
+
+1. Start with the business problem, not with 'we need an agent.'
+
+A lot of organizations begin with:
+
+> “Where can we use GenAI?”
+
+
+
+A better question is:
+
+> “What user journey or decision are we trying to improve, and what level of AI autonomy is actually necessary?”
+
+
+
+Sometimes retrieval is enough. Sometimes deterministic workflows are enough. Sometimes an agent genuinely adds value.
+
+That distinction makes you sound pragmatic rather than AI-hype driven.
+
+2. Separate capability from risk.
+
+You can introduce a simple conceptual ladder:
+
+Answer → Recommend → Decide → Act
+
+An AI system answering a question and an AI system executing an action should not necessarily have the same governance requirements.
+
+As you move right, you generally need stronger authorization, validation, monitoring and human oversight.
+
+3. Evaluation must be multidimensional.
+
+This is a great opportunity to use what you've been working on around evaluations without revealing your organization's implementation.
+
+You can say that evaluating an agent isn't just measuring whether the final answer is correct.
+
+For example:
+
+Routing quality — Did the request reach the appropriate capability?
+
+Answer quality — Was the response correct/relevant?
+
+Safety — Did the system appropriately handle harmful or unsupported requests?
+
+Groundedness — Is the answer supported by trusted information?
+
+Tool correctness — Did it select and use the right tool?
+
+Policy adherence — Did it stay within defined boundaries?
+
+Operational reliability — latency, failures, fallbacks, etc.
+
+A particularly strong panel statement would be:
+
+> “An agent can give a perfectly fluent answer and still fail operationally—because it routed incorrectly, accessed the wrong tool or took an action it wasn't authorized to take.”
+
+
+
+4. Golden datasets and live monitoring solve different problems.
+
+This ties directly into your recent evaluation work.
+
+You can explain generically that pre-production evaluation gives you a controlled benchmark, while production monitoring tells you whether behavior is drifting in the real world.
+
+So:
+
+Pre-production: curated test sets + human labels + automated evaluation.
+
+Production: telemetry + sampling + user feedback + human review + anomaly monitoring.
+
+This avoids discussing any internal implementation.
+
+5. Governance shouldn't be a final approval gate.
+
+This could become one of your strongest themes.
+
+Instead of:
+
+Build → Finish → Send to Risk
+
+advocate:
+
+Discover → Risk assessment → Design → Build → Evaluate → Pilot → Monitor
+
+with product, engineering, security, legal/compliance and risk involved at appropriate stages.
+
+You can phrase it as:
+
+> “The fastest path to production isn't bypassing governance. It's bringing governance into the design process early enough that you're not redesigning the system at the end.”
+
+
+
+6. Enterprise adoption is ultimately about trust.
+
+Accuracy alone doesn't create trust.
+
+Users need to understand what the system can do, what it cannot do, when it is uncertain, when a human is needed and what happens when something goes wrong.
+
+That gives you a nice closing point:
+
+> “The North Star for enterprise AI shouldn't simply be maximum autonomy. It should be the maximum useful autonomy that the organization can observe, govern and trust.”
+
+
+
+What I would deliberately NOT discuss
+
+Because you're appearing as an individual while employed by a financial institution, I'd avoid naming internal applications, architecture diagrams, model/vendor choices that aren't public, client information, internal risk/control procedures, security mechanisms, production metrics, incidents, vulnerabilities, infrastructure topology or specific governance decisions.
+
+Instead of saying “At my organization, we do X,” use formulations such as “One pattern enterprises can use is…”, “In a regulated environment, I would think about…”, or “A useful architectural principle is…”
+
+And if somebody directly asks, “How does your company handle that?”, you have a clean bridge:
+
+> “I can't speak to my firm's specific architecture or controls, but at an industry level, there are a few patterns I think are important…”
+
+
+
+Then go straight into your framework.
+
+For Panel 2 especially, you already have enough material for a very credible 40-minute conversation without revealing a single piece of proprietary information. Your strongest territory is the intersection of agent architecture + evaluation + governance + moving AI safely from experimentation into enterprise use.
